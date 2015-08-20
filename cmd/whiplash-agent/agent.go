@@ -9,24 +9,11 @@ import (
 	"github.com/sboyettedh/whiplash"
 )
 
-// these are our ceph service types
-const (
-	MON = iota
-	RGW
-	OSD
-)
-
 var (
 	whipconf string
 	hostname = os.Getenv("HOSTNAME")
 	svcs map[string]cephsvc
 )
-
-type cephsvc struct {
-	// stype is the service type, as enumerated above
-	stype int
-	sock string
-}
 
 func init() {
 	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.json", "Whiplash configuration file")
