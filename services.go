@@ -59,7 +59,7 @@ func (wlc *WLConfig) getCephServices() {
 			}
 			wlc.Svcs[k] = s
 		case strings.HasPrefix(k, "client.radosgw"):
-			s := &Svc{Type: RGW, Host: m["host"]}
+			s := &Svc{Type: RGW, Host: os.Getenv("HOSTNAME")}
 			if rsp, ok := m["rgw socket path"]; ok {
 				s.Sock = rsp
 			} else {

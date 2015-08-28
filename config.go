@@ -42,7 +42,6 @@ func New(filename string) (*WLConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	wlc.getCephServices()
 	return wlc, err
 }
 
@@ -68,6 +67,7 @@ func (wlc *WLConfig) getConfig(filename string) (error) {
 	if err != nil {
 		return err
 	}
+	wlc.getCephServices()
 	return nil
 }
 
