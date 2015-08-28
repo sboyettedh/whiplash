@@ -47,7 +47,7 @@ func (wlc *WLConfig) getCephServices() {
 		switch {
 		case strings.HasPrefix(k, "osd."):
 			s := &Svc{Type: OSD, Host: m["host"]}
-			s.Sock = strings.Replace(m["admin socket"], "$name", k, 1)
+			s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
 			vbytes, err := adminSockQuery(s.Sock, "version")
 			if err == nil {
 				s.Reporting = true
