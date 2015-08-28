@@ -21,7 +21,7 @@ type WLConfig struct {
 	CephConf map[string]map[string]string `json:"ceph_conf"`
 
 	// Ceph services discovered via the config file
-	Svcs map[string]Svc `json:"services"`
+	Svcs map[string]*Svc `json:"services"`
 }
 
 // WLAggConfig is the Whiplash aggregator configuration.
@@ -68,10 +68,6 @@ func (wlc *WLConfig) getConfig(filename string) (error) {
 		return err
 	}
 	return nil
-}
-
-// getCephServices examines wlc.CephConf and populates wlc.Svcs
-func (wlc *WLConfig) getCephServices() {
 }
 
 // parseCephConf reads a Ceph configuration file, and turns it into a
