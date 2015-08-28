@@ -42,6 +42,7 @@ func New(filename string) (*WLConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+	wlc.getCephServices()
 	return wlc, err
 }
 

@@ -62,7 +62,7 @@ func TestGetConfigParseCephConf(t *testing.T) {
 	// read the test config file
 	c, err = New("./test_corpus/test.config")
 	if err != nil {
-		t.Fatalf("Tried using test2.config file, but got: %v", err)
+		t.Fatalf("Tried using test.config file, but got: %v", err)
 	}
 	if c.CephConf["osd"]["admin socket"] != "/var/run/ceph/ceph-$name.asok" {
 		t.Errorf("`admin socket` value not as expected: %v", c.CephConf["osd"]["admin socket"])
