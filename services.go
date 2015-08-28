@@ -41,6 +41,7 @@ type cephVersion struct {
 
 // getCephServices examines wlc.CephConf and populates wlc.Svcs
 func (wlc *WLConfig) getCephServices() {
+	wlc.Svcs = make(map[string]*Svc)
 	// iterate over CephConf, adding OSDs and RGWs
 	for k, m := range wlc.CephConf {
 		switch {
