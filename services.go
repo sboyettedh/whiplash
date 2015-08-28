@@ -78,10 +78,10 @@ func (wlc *WLConfig) getCephServices() {
 		}
 	}
 	// if we get down here and Svcs is empty, we're on a monitor
-	if wlc.Svcs == nil {
+	if len(wlc.Svcs) == 0 {
 		k := "mon." + os.Getenv("HOSTNAME")
 		s := &Svc{Type: MON, Host: wlc.CephConf[k]["host"]}
-		s.Sock = strings.Replace(wlc.CephConf[k]["admin socket"], "$name", k, 1)
+		s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
 		vbytes, err := adminSockQuery(s.Sock, "version")
 		if err == nil {
 			s.Reporting = true
