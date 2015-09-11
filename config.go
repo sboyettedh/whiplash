@@ -11,8 +11,11 @@ import (
 
 // WLConfig is the overall Whiplash configuration.
 type WLConfig struct {
-	Aggregator   WLAggConfig `json:"aggregator"`
-	Agent        WLAgtConfig `json:"agent"`
+	// Aggregator config
+	Aggregator WLAggConfig `json:"aggregator"`
+
+	// Agent config
+	Agent WLAgtConfig `json:"agent"`
 
 	// Location of the Ceph configuration file
 	CephConfLoc string `json:"cephconf_loc"`

@@ -112,7 +112,7 @@ func TestGetRGWSvcs(t *testing.T) {
 		// and admin socket path
 		svcsock := "/var/run/ceph/radosgw.client.radosgw.peon9999"
 		if svc.Sock != svcsock {
-			t.Errorf("%v should have sock /var/run/ceph/radosgw.client.radosgw.peon9999 but is: '%v'", svcname, svcsock, svc.Sock)
+			t.Errorf("%v should have sock %v but is: '%v'", svcname, svcsock, svc.Sock)
 		}
 		// Reporting should be false, and we should not have a version string
 		if svc.Reporting == true {

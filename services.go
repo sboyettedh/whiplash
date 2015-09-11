@@ -3,8 +3,8 @@ package whiplash
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"net"
+	"os"
 	"strings"
 	"time"
 )
@@ -48,7 +48,7 @@ func (wlc *WLConfig) getCephServices() {
 		case strings.HasPrefix(k, "osd."):
 			s := &Svc{Type: OSD, Host: m["host"]}
 			s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
-			vbytes, err := adminSockQuery(s.Sock, "version")
+			vbytes, err := svcQuery(s.Sock, "version")
 			if err == nil {
 				s.Reporting = true
 			}
@@ -65,7 +65,7 @@ func (wlc *WLConfig) getCephServices() {
 			} else {
 				s.Sock = strings.Replace(m["admin socket"], "$name", k, 1)
 			}
-			vbytes, err := adminSockQuery(s.Sock, "version")
+			vbytes, err := svcQuery(s.Sock, "version")
 			if err == nil {
 				s.Reporting = true
 			}
@@ -82,7 +82,7 @@ func (wlc *WLConfig) getCephServices() {
 		k := "mon." + os.Getenv("HOSTNAME")
 		s := &Svc{Type: MON, Host: wlc.CephConf[k]["host"]}
 		s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
-		vbytes, err := adminSockQuery(s.Sock, "version")
+		vbytes, err := svcQuery(s.Sock, "version")
 		if err == nil {
 			s.Reporting = true
 		}
@@ -95,7 +95,7 @@ func (wlc *WLConfig) getCephServices() {
 	}
 }
 
-func adminSockQuery(sock, cmd string) ([]byte, error) {
+func svcQuery(sock, cmd string) ([]byte, error) {
 	b1 := make([]byte, 64)
 	var b2 []byte
 
