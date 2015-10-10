@@ -179,6 +179,7 @@ func (s *Svc) Query(req string) error {
 		s.mread += int32(n)
 		s.b2 = append(s.b2, s.b1[:n]...)
 	}
-	s.Resp = s.b2[:s.mlen - 1]
+	s.Resp = s.b2[:s.mlen]
+	log.Printf("Read '%v'", string(s.Resp))
 	return err
 }
