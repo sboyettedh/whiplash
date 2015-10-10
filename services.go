@@ -51,9 +51,9 @@ type Svc struct {
 	// b0 is where we read the message length into
 	b0 []byte
 	// mlen is the unpacked length from b0
-	mlen int
+	mlen int32
 	// mread is the number of bytes read in the message so far
-	mread int
+	mread int32
 	// b1 is the buffer we read into from the network
 	b1 []byte
 	// b2 accumulates data from b1
@@ -161,6 +161,7 @@ func (s *Svc) Query(req string) error {
 	if err != nil {
 		return fmt.Errorf("could not decode message length on %v: %v\n", s.Sock, err)
 	}
+	log.Printf("Message length %v bytes", s.mlen)
 
 	// and read the message
 	for {
@@ -175,7 +176,7 @@ func (s *Svc) Query(req string) error {
 		if err != nil && err.Error() != "EOF" {
 			return fmt.Errorf("could not read from %v: %v\n", s.Sock, err)
 		}
-		s.mread += n
+		s.mread += int32(n)
 		s.b2 = append(s.b2, s.b1[:n]...)
 	}
 	s.Resp = s.b2[:s.mlen - 1]
