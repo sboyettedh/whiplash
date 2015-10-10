@@ -4,15 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/sboyettedh/whiplash"
 )
 
 var (
 	whipconf string
-	hostname = os.Getenv("HOSTNAME")
-	svcs map[string]cephsvc
 )
 
 func init() {
@@ -27,16 +24,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	// hit the OSD admin sockets we know about and ask for ceph version
-	for key, _ := range wl.CephConf {
-		if strings.HasPrefix(key, "osd.") {
-			sock := strings.Replace(wl.CephConf["osd"]["admin socket"], "$name", key, 1)
-			fmt.Printf("%v ---------------------------\n", sock)
-			res, err := askceph(sock, "{\"prefix\":\"version\"}")
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Printf("%v\n", string(res))
+	// ask known services what version of Ceph they're running
+	for svcname, svc := range wl.Svcs {
+		if svc.Reporting == false {
+			fmt.Printf("%v: not reporting: %v", svcname, svc.Err)
+			continue
 		}
+		fmt.Printf("%v: %q\n", svcname, svc.Version)
 	}
 }

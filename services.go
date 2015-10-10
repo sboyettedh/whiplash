@@ -1,7 +1,6 @@
 package whiplash
 
 import (
-	"log"
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
@@ -22,7 +21,7 @@ const (
 
 var (
 	// this is the list of admin socket commands we know
-	cephcmds = map[string][]byte{"version": []byte("{\"prefix\": \"version\"}\000")}
+	cephcmds = map[string][]byte{"version": []byte("{\"prefix\":\"version\"}\000")}
 )
 
 // Svc represents a Ceph service
@@ -61,7 +60,7 @@ type Svc struct {
 }
 
 type cephVersion struct {
-	version string
+	Version string `json:"version"`
 }
 
 // getCephServices examines wlc.CephConf and populates wlc.Svcs
@@ -75,8 +74,6 @@ func (wlc *WLConfig) getCephServices() {
 			s.Type = OSD
 			s.Host = m["host"]
 			s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
-			s.Ping()
-			wlc.Svcs[k] = s
 		case strings.HasPrefix(k, "client.radosgw"):
 			s.Type = RGW
 			s.Host = os.Getenv("HOSTNAME")
@@ -85,17 +82,14 @@ func (wlc *WLConfig) getCephServices() {
 			} else {
 				s.Sock = strings.Replace(m["admin socket"], "$name", k, 1)
 			}
+		case strings.HasPrefix(k, "mon." + os.Getenv("HOSTNAME")):
+			s := &Svc{Type: MON, Host: wlc.CephConf[k]["host"], b1: make([]byte, 64)}
+			s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
+		}
+		if _, err := os.Stat(s.Sock); err == nil {
 			s.Ping()
 			wlc.Svcs[k] = s
 		}
-	}
-	// if we get down here and Svcs is empty, we're on a monitor
-	if len(wlc.Svcs) == 0 {
-		k := "mon." + os.Getenv("HOSTNAME")
-		s := &Svc{Type: MON, Host: wlc.CephConf[k]["host"], b1: make([]byte, 64)}
-		s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
-		s.Ping()
-		wlc.Svcs[k] = s
 	}
 }
 
@@ -105,18 +99,21 @@ func (wlc *WLConfig) getCephServices() {
 // Reporting is set to 'false', and Err is set to the returned error.
 func (s *Svc) Ping() {
 	err := s.Query("version")
-	if err == nil {
-		s.Reporting = true
-		s.Err = nil
-		vs := &cephVersion{}
-		err = json.Unmarshal(s.Resp, vs)
-		if err == nil {
-			s.Version = vs.version
-		}
-	} else {
+	if err != nil {
 		s.Reporting = false
 		s.Err = err
+		return
 	}
+	var vs cephVersion
+	err = json.Unmarshal(s.Resp, &vs)
+	if err != nil {
+		s.Reporting = false
+		s.Err = err
+		return
+	}
+	s.Reporting = true
+	s.Err = nil
+	s.Version = vs.Version
 }
 
 // Query sends a request to a Ceph service and reads the result.
@@ -140,7 +137,6 @@ func (s *Svc) Query(req string) error {
 	if err != nil {
 		return fmt.Errorf("could not write to %v: %v\n", s.Sock, err)
 	}
-	log.Printf("Sent '%v'", string(cmd))
 
 	// zero our byte-collectors and bytes-read counter
 	s.b1 = make([]byte, 64)
@@ -161,7 +157,6 @@ func (s *Svc) Query(req string) error {
 	if err != nil {
 		return fmt.Errorf("could not decode message length on %v: %v\n", s.Sock, err)
 	}
-	log.Printf("Message length %v bytes", s.mlen)
 
 	// and read the message
 	for {
@@ -180,6 +175,5 @@ func (s *Svc) Query(req string) error {
 		s.b2 = append(s.b2, s.b1[:n]...)
 	}
 	s.Resp = s.b2[:s.mlen]
-	log.Printf("Read '%v'", string(s.Resp))
 	return err
 }
