@@ -38,10 +38,13 @@ type WLAggConfig struct {
 type WLAgtConfig struct {
 }
 
-// NewConfig returns a populated Whiplash configuration.
-func New(filename string) (*WLConfig, error) {
+// NewConfig returns a populated Whiplash configuration. `wlconf` is
+// the whiplash configuration file. `gensvcs` controls whether an
+// attempt will be made to read the Ceph configuration and construct a
+// list of services active on the machine.
+func New(wlconf string, gensvcs bool) (*WLConfig, error) {
 	wlc := &WLConfig{}
-	err := wlc.getConfig(filename)
+	err := wlc.getConfig(wlconf, gensvcs)
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +54,8 @@ func New(filename string) (*WLConfig, error) {
 // getConfig reads the specified whiplash config file and returns its
 // contents, along with the contents of the Ceph configuration file it
 // points to.
-func (wlc *WLConfig) getConfig(filename string) (error) {
-	conffile, err := ioutil.ReadFile(filename)
+func (wlc *WLConfig) getConfig(wlconf string, gensvcs bool) (error) {
+	conffile, err := ioutil.ReadFile(wlconf)
 	if err != nil {
 		return err
 	}
@@ -66,11 +69,13 @@ func (wlc *WLConfig) getConfig(filename string) (error) {
 	if wlc.Aggregator.BindAddr == "" {
 		return fmt.Errorf("No aggregator address found in `%v`", wlc.CephConfLoc)
 	}
-	wlc.CephConf, err = parseCephConf(wlc.CephConfLoc)
-	if err != nil {
-		return err
+	if gensvcs {
+		wlc.CephConf, err = parseCephConf(wlc.CephConfLoc)
+		if err != nil {
+			return err
+		}
+		wlc.getCephServices()
 	}
-	wlc.getCephServices()
 	return nil
 }
 

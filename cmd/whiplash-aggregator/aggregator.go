@@ -21,7 +21,7 @@ func init() {
 
 func main() {
 	flag.Parse()
-	wl, err := whiplash.New(whipconf)
+	wl, err := whiplash.New(whipconf, false)
 	if err != nil {
 		log.Printf("%v: could not read configuration file: %v\n", os.Args[0], err)
 		os.Exit(1)
