@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"encoding/json"
 	"flag"
 	"log"
 	"os"
@@ -13,6 +14,8 @@ import (
 
 var (
 	whipconf string
+	osds map[string]*whiplash.Osd // current status of all OSDs
+	osdmap map[string][]string // OSDs in each cephstore
 )
 
 func init() {
@@ -38,14 +41,26 @@ func main() {
 	// at the terminal we're running in.
 
 	asconf := asock.Config{
-		Sockname: wl.Aggregator.BindAddr + wl.Aggregator.BindPort,
-		Msglvl: asock.Conn, Timeout: 100,
+		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
+		Msglvl: asock.All,
+		Timeout: 100,
 	}
 	as, err := asock.NewTCP(asconf)
 	if err != nil {
 		panic(err)
 	}
 	log.Println("Whiplash aggregator is listening.")
+
+	// set up command handlers
+	handlers := map[string]asock.DispatchFunc{
+		"osdupdate": osdUpdate,
+	}
+	for name, handler := range handlers {
+		err = as.AddHandler(name, "nosplit", handler)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	// create a channel for the asock Msgr handler and launch it
 	msgchan := make(chan error, 1)
@@ -107,4 +122,9 @@ func msgHandler(as *asock.Asock, msgchan chan error) {
 			log.Println(msg)
 		}
 	}
+}
+
+func osdUpdate(args [][]byte) ([]byte, error) {
+	log.Println("Got payload")
+	return nil, nil
 }
