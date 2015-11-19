@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"encoding/json"
+	"encoding/json"
 	"flag"
 	"log"
 	"os"
@@ -13,13 +13,23 @@ import (
 )
 
 var (
+	// whiplash configuration file
 	whipconf string
-	osds map[string]*whiplash.Osd // current status of all OSDs
-	osdmap map[string][]string // OSDs in each cephstore
+	// current status of all OSDs
+	osds map[string]*whiplash.Osd
+	// the smaller map whihh we unmarshal JSON data about OSDs into
+	josds map[string]*whiplash.Osd
+	// map[cephstore][]osd - lets us do per-cephstore reporting easily
+	osdmap map[string][]string
+	// pre-rolled messages
+	success = []byte("received")
 )
 
 func init() {
 	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.json", "Whiplash configuration file")
+	osds = make(map[string]*whiplash.Osd)
+	josds = make(map[string]*whiplash.Osd)
+	osdmap = make(map[string][]string)
 }
 
 func main() {
@@ -125,6 +135,14 @@ func msgHandler(as *asock.Asock, msgchan chan error) {
 }
 
 func osdUpdate(args [][]byte) ([]byte, error) {
-	log.Println("Got payload")
+	// unmarshal JSON data
+	err := json.Unmarshal(args[0], &josds)
+	if err != nil {
+		return nil, err
+	}
+	// iterate over the vivified data
+	for osdname, osddata := range josds {
+		// if we already know about the osd, update its data. if we don't, add it to 
+		osd, ok := osds[osdname]
 	return nil, nil
 }
