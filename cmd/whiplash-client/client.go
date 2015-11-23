@@ -37,7 +37,8 @@ func main() {
 			log.Printf("%v: not reporting: %v", svcname, svc.Err)
 			continue
 		}
-		if svc.Type == whiplash.OSD {
+		switch svc.Type {
+		case whiplash.OSD:
 			var osderr string
 			if svc.Err == nil {
 				osderr = ""
