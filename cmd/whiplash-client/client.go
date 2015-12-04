@@ -91,18 +91,18 @@ func main() {
 	// send our data
 	ac, err := aclient.NewTCP(acconf)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	defer ac.Close()
 	josd, err := json.Marshal(osds)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	req := []byte("osdupdate ")
 	req = append(req, josd...)
 	resp, err := ac.Dispatch(req)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	log.Println(string(resp))
 
