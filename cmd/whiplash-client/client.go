@@ -3,8 +3,12 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"io/ioutil"
 	"log"
 	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
 
 	"firepear.net/aclient"
 	"github.com/sboyettedh/whiplash"
@@ -21,6 +25,24 @@ func init() {
 }
 
 func main() {
+	// set up logfile
+	f, err := os.Create("/var/log/whiplash-client.log")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+	// write pidfile
+	pidstr := strconv.Itoa(os.Getpid()) + "\n"
+	err = ioutil.WriteFile("/var/run/whiplash-client.pid", []byte(pidstr), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// and register SIGINT/SIGTERM handler
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+
+
 	flag.Parse()
 	wl, err := whiplash.New(whipconf, true)
 	if err != nil {

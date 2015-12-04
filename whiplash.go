@@ -20,7 +20,7 @@ type Host struct {
 	ID int
 	Name string
 	Rack string
-	Weight float
+	Weight int
 }
 
 type Osd struct {
