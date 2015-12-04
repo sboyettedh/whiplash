@@ -24,24 +24,31 @@ func init() {
 	hostname, _ = os.LookupEnv("HOSTNAME")
 }
 
-func main() {
+func startup(fn string) (chan os.Signal, error) {
 	// set up logfile
-	f, err := os.Create("/var/log/whiplash-client.log")
+	f, err := os.Create("/var/log/" + fn + ".log")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer f.Close()
 	log.SetOutput(f)
 	// write pidfile
 	pidstr := strconv.Itoa(os.Getpid()) + "\n"
-	err = ioutil.WriteFile("/var/run/whiplash-client.pid", []byte(pidstr), 0644)
+	err = ioutil.WriteFile("/var/run/" + fn + ".pid", []byte(pidstr), 0644)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	// and register SIGINT/SIGTERM handler
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	return sigchan, err
+}
 
+func main() {
+	sigchan, err := startup("whiplash-client")
+	if err != nil{
+		log.Fatal(err)
+	}
 
 	flag.Parse()
 	wl, err := whiplash.New(whipconf, true)
@@ -98,4 +105,21 @@ func main() {
 		panic(err)
 	}
 	log.Println(string(resp))
+
+	// the mainloop
+	keepalive := true
+	for keepalive {
+		select {
+		case <- sigchan:
+			// we've trapped a signal from the OS. tell our Asock to
+			// shut down, but don't exit the eventloop because we want
+			// to handle the Msgs which will be incoming.
+			log.Println("OS signal received; shutting down")
+			keepalive = false
+		}
+		// there's no default case in the select, as that would cause
+		// it to be nonblocking. and that would cause main() to exit
+		// immediately.
+	}
 }
+
