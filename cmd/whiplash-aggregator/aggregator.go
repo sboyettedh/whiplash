@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"firepear.net/asock"
@@ -17,7 +19,7 @@ var (
 	whipconf string
 	// current status of all OSDs
 	osds map[string]*whiplash.Osd
-	// the smaller map whihh we unmarshal JSON data about OSDs into
+	// the smaller map which we unmarshal JSON data about OSDs into
 	josds map[string]*whiplash.Osd
 	// map[cephstore][]osd - lets us do per-cephstore reporting easily
 	osdmap map[string][]string
@@ -33,22 +35,29 @@ func init() {
 }
 
 func main() {
+	// set up logfile
+	f, err := os.Create("/var/log/whiplash.log")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+	// write pidfile
+	pidstr := strconv.Itoa(os.Getpid()) + "\n"
+	err = ioutil.WriteFile("/var/run/whiplash-aggregator.pid", []byte(pidstr), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// and register SIGINT/SIGTERM handler
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+
+	// parse flags and read the whiplash configuration
 	flag.Parse()
 	wl, err := whiplash.New(whipconf, false)
 	if err != nil {
-		log.Printf("%v: could not read configuration file: %v\n", os.Args[0], err)
-		os.Exit(1)
+		log.Fatalf("could not read configuration file: %v\n", err)
 	}
-
-	// let's give ourselves a way to shut down. we'll listen for
-	// SIGINT and SIGTERM, so we can behave like a proper service
-	// (mostly -- we're not writing out a pidfile). anyway, to do that
-	// we need a channel to recieve signal notifications on.
-	sigchan := make(chan os.Signal, 1)
-	// and then we register sigchan to listen for the signals we want.
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-	// we now respond properly to 'kill' calls to our pid, and to C-c
-	// at the terminal we're running in.
 
 	asconf := asock.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
@@ -57,7 +66,7 @@ func main() {
 	}
 	as, err := asock.NewTCP(asconf)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	log.Println("Whiplash aggregator is listening.")
 
@@ -68,7 +77,7 @@ func main() {
 	for name, handler := range handlers {
 		err = as.AddHandler(name, "nosplit", handler)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}
 
@@ -141,8 +150,9 @@ func osdUpdate(args [][]byte) ([]byte, error) {
 		return nil, err
 	}
 	// iterate over the vivified data
-	for osdname, osddata := range josds {
+	//for osdname, osddata := range josds {
 		// if we already know about the osd, update its data. if we don't, add it to 
-		osd, ok := osds[osdname]
+	//	osd, ok := osds[osdname]
+	//}
 	return nil, nil
 }
