@@ -6,27 +6,27 @@ import (
 
 func TestGetConfig(t *testing.T) {
 	// try nonexistant file
-	c, err := New("./test_corpus/zzzzxxxx")
+	c, err := New("./test_corpus/zzzzxxxx", false)
 	if err == nil {
 		t.Errorf("Tried using nonexistant config file, but err is nil and config is %v", c)
 	}
 	// try non-json file
-	c, err = New("./test_corpus/notjson.config")
+	c, err = New("./test_corpus/notjson.config", false)
 	if err == nil {
 		t.Errorf("Tried using non-json config file, but err is nil and config is %v", c)
 	}
 	// try json file which isn't a config for us
-	c, err = New("./test_corpus/badjson.config")
+	c, err = New("./test_corpus/badjson.config", false)
 	if err == nil {
 		t.Errorf("Tried using non-json config file, but err is nil and config is %v", c)
 	}
 	// try json file which is a config but doesn't have an agg addr
-	c, err = New("./test_corpus/badjson2.config")
+	c, err = New("./test_corpus/badjson2.config", false)
 	if err == nil {
 		t.Errorf("Tried using bad config file, but err is nil and config is %v", c)
 	}
 	// use good config file
-	c, err = New("./test_corpus/test.config")
+	c, err = New("./test_corpus/test.config", false)
 	if err != nil {
 		t.Fatalf("Tried using test.config file, but got: %v", err)
 	}
@@ -43,7 +43,7 @@ func TestGetConfig(t *testing.T) {
 
 func TestGetConfigGetIface(t *testing.T) {
 	// read the test config file
-	c, err := New("./test_corpus/test.config")
+	c, err := New("./test_corpus/test.config", false)
 	if err != nil {
 		t.Fatalf("Tried using test.config file, but got: %v", err)
 	}
@@ -55,16 +55,16 @@ func TestGetConfigGetIface(t *testing.T) {
 
 func TestGetConfigParseCephConf(t *testing.T) {
 	// bad file first, just to be sure
-	c, err := New("./test_corpus/test2.config")
+	c, err := New("./test_corpus/nofilenamedthis.config", true)
 	if err == nil {
 		t.Errorf("Opening nonexistent file worked; got: %v", c)
 	}
 	// read the test config file
-	c, err = New("./test_corpus/test.config")
+	c, err = New("./test_corpus/test.config", true)
 	if err != nil {
 		t.Fatalf("Tried using test.config file, but got: %v", err)
 	}
 	if c.CephConf["osd"]["admin socket"] != "/var/run/ceph/ceph-$name.asok" {
-		t.Errorf("`admin socket` value not as expected: %v", c.CephConf["osd"]["admin socket"])
+		t.Errorf("`admin socket` value not as expected: '%v'", c.CephConf["osd"]["admin socket"])
 	}
 }
