@@ -105,7 +105,10 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 		for _, svc := range svcs {
 			svc.Ping()
 			log.Println("sending ping request")
-			sendData("ping", &whiplash.Request{Svc: svc.Core, Payload: nil})
+			tmpPayload, _ := json.Marshal(nil) // TODO this'll go away
+											   // when we have per-svc
+											   // data flowing
+			sendData("ping", &whiplash.Request{Svc: svc.Core, Payload: tmpPayload})
 		}
 	}
 }
