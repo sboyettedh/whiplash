@@ -20,7 +20,6 @@ var (
 	whipconf string
 	hostname string
 	acconf *aclient.Config
-	req []byte
 	// which interval set to use for tickers
 	intv int
 	// the interval sets
@@ -35,7 +34,6 @@ var (
 func init() {
 	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.json", "Whiplash configuration file")
 	hostname, _ = os.LookupEnv("HOSTNAME")
-	req = []byte("osdupdate ")
 }
 
 func clientInit(fn string) (chan os.Signal, error) {
