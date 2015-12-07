@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"encoding/json"
+	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"log"
@@ -17,15 +17,17 @@ import (
 var (
 	// whiplash configuration file
 	whipconf string
-	// map[cephstore][]osd - lets us do per-cephstore reporting easily
-	osdmap map[string][]string
+	// storage for current status of all reporting services
+	svcs = map[string]*whiplash.SvcCore{}
+	// map[cephstore][]svcname - lets us do per-cephstore reporting
+	// until mon reporting of 'ceph osd tree' is in
+	svcmap = map[string][]string{}
 	// pre-rolled messages
 	success = []byte("received")
 )
 
 func init() {
 	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.json", "Whiplash configuration file")
-	osdmap = make(map[string][]string)
 }
 
 func clientInit(fn string) (chan os.Signal, error) {
@@ -147,6 +149,21 @@ func msgHandler(as *asock.Asock, msgchan chan error) {
 }
 
 func pingHandler(args [][]byte) ([]byte, error) {
-	log.Println(string(args[0]))
+	req := &whiplash.Request{}
+	json.Unmarshal(args[0], req)
+	if svc, ok := svcs[req.Svc.Name]; !ok {
+		log.Printf("adding svc %v", req.Svc.Name)
+		// add sercice to svcs
+		svcs[req.Svc.Name] = req.Svc
+		// and to svcmap
+		if _, ok := svcmap[req.Svc.Host]; !ok {
+			log.Printf("adding host %v", req.Svc.Host)
+			svcmap[req.Svc.Host] = []string{}
+		}
+		svcmap[req.Svc.Host] = append(svcmap[req.Svc.Host], req.Svc.Name)
+	} else {
+		// TODO handle updates
+		log.Printf("got update from %v", svc.Name)
+	}
 	return []byte("ok"), nil
 }
