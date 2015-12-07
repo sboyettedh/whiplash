@@ -28,29 +28,38 @@ func init() {
 	osdmap = make(map[string][]string)
 }
 
-func main() {
+func clientInit(fn string) (chan os.Signal, error) {
 	// set up logfile
-	f, err := os.Create("/var/log/whiplash.log")
+	f, err := os.Create("/var/log/" + fn + ".log")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	defer f.Close()
 	log.SetOutput(f)
 	// write pidfile
 	pidstr := strconv.Itoa(os.Getpid()) + "\n"
-	err = ioutil.WriteFile("/var/run/whiplash-aggregator.pid", []byte(pidstr), 0644)
+	err = ioutil.WriteFile("/var/run/" + fn + ".pid", []byte(pidstr), 0644)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	// and register SIGINT/SIGTERM handler
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	return sigchan, err
+}
 
+func main() {
 	// parse flags and read the whiplash configuration
 	flag.Parse()
+	sigchan, err := clientInit("whiplash")
+	if err != nil{
+		log.Fatal(err)
+	}
+	log.Printf("whiplash-aggregator v%v beginning operations\n", whiplash.Version)
+
 	wl, err := whiplash.New(whipconf, false)
 	if err != nil {
 		log.Fatalf("could not read configuration file: %v\n", err)
+		os.Exit(1)
 	}
 
 	asconf := asock.Config{
@@ -62,7 +71,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Whiplash aggregator is listening.")
+	log.Println("listening for clients")
 
 	// set up command handlers
 	handlers := map[string]asock.DispatchFunc{
