@@ -37,3 +37,11 @@ type Request struct {
 	// in a ping request.
 	Payload interface{} `json:"payload"`
 }
+
+// OSD holds data specific to OSD services.
+type OSD struct {
+	// Weight is the crush weight of the OSD.
+	Weight float32
+	// Cap is the percentage of OSD storage capacity used.
+	Cap float32
+}
