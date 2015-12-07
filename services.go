@@ -24,25 +24,29 @@ var (
 	cephcmds = map[string][]byte{"version": []byte("{\"prefix\":\"version\"}\000")}
 )
 
-// Svc represents a Ceph service
-type Svc struct {
+// SvcCore
+type SvcCore struct {
+	// Name is the name/ID of the service
+	Name string
 	// Type is the service/daemon type: MON, RGW, OSD
 	Type int
+	// Host is the machine where the service runs
+	Host string
+	// Version is the Ceph version of the service.
+	Version string
+	// Reporting shows if a service is contactable and responsive
+	Reporting bool
+}
+
+// Svc represents a Ceph service
+type Svc struct {
+	Core *SvcCore
 
 	// Sock is the admin socket for the service
 	Sock string
 
-	// Host is the machine where the service runs
-	Host string
-
-	// Reporting shows if a service is contactable and responsive
-	Reporting bool
-
 	// Err holds the error (if any) from the Ping() check
 	Err error
-
-	// Version is the Ceph version of the service.
-	Version string
 
 	// Resp receives response data from Query()
 	Resp []byte
@@ -68,22 +72,24 @@ func (wlc *WLConfig) getCephServices() {
 	wlc.Svcs = make(map[string]*Svc)
 	// iterate over CephConf, adding OSDs and RGWs
 	for k, m := range wlc.CephConf {
-		s := &Svc{b0: make([]byte, 4)}
+		s := &Svc{Core: &SvcCore{Name: k}, b0: make([]byte, 4)}
 		switch {
 		case strings.HasPrefix(k, "osd."):
-			s.Type = OSD
-			s.Host = m["host"]
+			s.Core.Type = OSD
+			s.Core.Host = m["host"]
 			s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
 		case strings.HasPrefix(k, "client.radosgw"):
-			s.Type = RGW
-			s.Host = os.Getenv("HOSTNAME")
+			s.Core.Type = RGW
+			s.Core.Host = os.Getenv("HOSTNAME")
 			if rsp, ok := m["rgw socket path"]; ok {
 				s.Sock = rsp
 			} else {
 				s.Sock = strings.Replace(m["admin socket"], "$name", k, 1)
 			}
 		case strings.HasPrefix(k, "mon." + os.Getenv("HOSTNAME")):
-			s := &Svc{Type: MON, Host: wlc.CephConf[k]["host"], b1: make([]byte, 64)}
+			//s := &Svc{Type: MON, Host: wlc.CephConf[k]["host"], b1: make([]byte, 64)}
+			s.Core.Type = MON
+			s.Core.Host = wlc.CephConf[k]["host"]
 			s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
 		}
 		if _, err := os.Stat(s.Sock); err == nil {
@@ -100,20 +106,20 @@ func (wlc *WLConfig) getCephServices() {
 func (s *Svc) Ping() {
 	err := s.Query("version")
 	if err != nil {
-		s.Reporting = false
+		s.Core.Reporting = false
 		s.Err = err
 		return
 	}
 	var vs cephVersion
 	err = json.Unmarshal(s.Resp, &vs)
 	if err != nil {
-		s.Reporting = false
+		s.Core.Reporting = false
 		s.Err = err
 		return
 	}
-	s.Reporting = true
+	s.Core.Reporting = true
 	s.Err = nil
-	s.Version = vs.Version
+	s.Core.Version = vs.Version
 }
 
 // Query sends a request to a Ceph service and reads the result.

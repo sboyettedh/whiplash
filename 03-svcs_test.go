@@ -22,12 +22,12 @@ func TestGetOSDSvcs(t *testing.T) {
 			t.Fatalf("Should have found svc %v but did not", svcname)
 		}
 		// check type
-		if svc.Type != OSD {
-			t.Errorf("%v should have type OSD but is: '%v'", svcname, svc.Type)
+		if svc.Core.Type != OSD {
+			t.Errorf("%v should have type OSD but is: '%v'", svcname, svc.Core.Type)
 		}
 		// and assigned host
-		if svc.Host != "cephstore9999" {
-			t.Errorf("%v should be 'cephstore9999' but is: '%v'", svcname, svc.Type)
+		if svc.Core.Host != "cephstore9999" {
+			t.Errorf("%v should be 'cephstore9999' but is: '%v'", svcname, svc.Core.Type)
 		}
 		// and admin socket path
 		svcsock := "/var/run/ceph/ceph-" + svcname + ".asok"
@@ -35,11 +35,11 @@ func TestGetOSDSvcs(t *testing.T) {
 			t.Errorf("%v should have sock %v but is: '%v'", svcname, svcsock, svc.Sock)
 		}
 		// Reporting should be false, and we should not have a version string
-		if svc.Reporting == true {
+		if svc.Core.Reporting == true {
 			t.Errorf("%v should not be reporting, but claims to be", svcname)
 		}
-		if svc.Version != "" {
-			t.Errorf("%v should not have a version, but has '%v'", svcname, svc.Version)
+		if svc.Core.Version != "" {
+			t.Errorf("%v should not have a version, but has '%v'", svcname, svc.Core.Version)
 		}
 	}
 }
@@ -62,12 +62,12 @@ func TestGetMONSvcs(t *testing.T) {
 			t.Fatalf("Should have found svc %v but did not", svcname)
 		}
 		// check type
-		if svc.Type != MON {
-			t.Errorf("%v should have type MON but is: '%v'", svcname, svc.Type)
+		if svc.Core.Type != MON {
+			t.Errorf("%v should have type MON but is: '%v'", svcname, svc.Core.Type)
 		}
 		// and assigned host
-		if svc.Host != "peon9999" {
-			t.Errorf("%v should be 'peon9999' but is: '%v'", svcname, svc.Type)
+		if svc.Core.Host != "peon9999" {
+			t.Errorf("%v should be 'peon9999' but is: '%v'", svcname, svc.Core.Type)
 		}
 		// and admin socket path
 		svcsock := "/var/run/ceph/ceph-" + svcname + ".asok"
@@ -75,11 +75,11 @@ func TestGetMONSvcs(t *testing.T) {
 			t.Errorf("%v should have sock %v but is: '%v'", svcname, svcsock, svc.Sock)
 		}
 		// Reporting should be false, and we should not have a version string
-		if svc.Reporting == true {
+		if svc.Core.Reporting == true {
 			t.Errorf("%v should not be reporting, but claims to be", svcname)
 		}
-		if svc.Version != "" {
-			t.Errorf("%v should not have a version, but has '%v'", svcname, svc.Version)
+		if svc.Core.Version != "" {
+			t.Errorf("%v should not have a version, but has '%v'", svcname, svc.Core.Version)
 		}
 	}
 }
@@ -102,12 +102,12 @@ func TestGetRGWSvcs(t *testing.T) {
 			t.Fatalf("Should have found svc %v but did not", svcname)
 		}
 		// check type
-		if svc.Type != RGW {
-			t.Errorf("%v should have type RGW but is: '%v'", svcname, svc.Type)
+		if svc.Core.Type != RGW {
+			t.Errorf("%v should have type RGW but is: '%v'", svcname, svc.Core.Type)
 		}
 		// and assigned host
-		if svc.Host != "peon9999" {
-			t.Errorf("%v should be 'peon9999' but is: '%v'", svcname, svc.Type)
+		if svc.Core.Host != "peon9999" {
+			t.Errorf("%v should be 'peon9999' but is: '%v'", svcname, svc.Core.Type)
 		}
 		// and admin socket path
 		svcsock := "/var/run/ceph/radosgw.client.radosgw.peon9999"
@@ -115,11 +115,11 @@ func TestGetRGWSvcs(t *testing.T) {
 			t.Errorf("%v should have sock %v but is: '%v'", svcname, svcsock, svc.Sock)
 		}
 		// Reporting should be false, and we should not have a version string
-		if svc.Reporting == true {
+		if svc.Core.Reporting == true {
 			t.Errorf("%v should not be reporting, but claims to be", svcname)
 		}
-		if svc.Version != "" {
-			t.Errorf("%v should not have a version, but has '%v'", svcname, svc.Version)
+		if svc.Core.Version != "" {
+			t.Errorf("%v should not have a version, but has '%v'", svcname, svc.Core.Version)
 		}
 	}
 }

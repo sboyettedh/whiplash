@@ -31,3 +31,6 @@ type Osd struct {
 	Utilized int
 	Err string
 }
+
+type Request struct {
+}
