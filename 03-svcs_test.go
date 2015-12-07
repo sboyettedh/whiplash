@@ -7,7 +7,7 @@ import (
 
 func TestGetOSDSvcs(t *testing.T) {
 	// read the OSD config file
-	c, err := New("./test_corpus/testosd.config")
+	c, err := New("./test_corpus/testosd.config", true)
 	if err != nil {
 		t.Fatalf("Tried using testosd.config file, but got: %v", err)
 	}
@@ -30,7 +30,7 @@ func TestGetOSDSvcs(t *testing.T) {
 			t.Errorf("%v should be 'cephstore9999' but is: '%v'", svcname, svc.Core.Type)
 		}
 		// and admin socket path
-		svcsock := "/var/run/ceph/ceph-" + svcname + ".asok"
+		svcsock := "./test_corpus/osdsocks/ceph-" + svcname + ".asok"
 		if svc.Sock != svcsock {
 			t.Errorf("%v should have sock %v but is: '%v'", svcname, svcsock, svc.Sock)
 		}
@@ -47,7 +47,7 @@ func TestGetOSDSvcs(t *testing.T) {
 func TestGetMONSvcs(t *testing.T) {
 	os.Setenv("HOSTNAME", "peon9999")
 	// read the MON config file
-	c, err := New("./test_corpus/test.config")
+	c, err := New("./test_corpus/test.config", true)
 	if err != nil {
 		t.Fatalf("Tried using test.config file, but got: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestGetMONSvcs(t *testing.T) {
 			t.Errorf("%v should be 'peon9999' but is: '%v'", svcname, svc.Core.Type)
 		}
 		// and admin socket path
-		svcsock := "/var/run/ceph/ceph-" + svcname + ".asok"
+		svcsock := "./test_corpus/monsocks/ceph-" + svcname + ".asok"
 		if svc.Sock != svcsock {
 			t.Errorf("%v should have sock %v but is: '%v'", svcname, svcsock, svc.Sock)
 		}
@@ -87,7 +87,7 @@ func TestGetMONSvcs(t *testing.T) {
 func TestGetRGWSvcs(t *testing.T) {
 	os.Setenv("HOSTNAME", "peon9999")
 	// read the RGW config file
-	c, err := New("./test_corpus/testrgw.config")
+	c, err := New("./test_corpus/testrgw.config", true)
 	if err != nil {
 		t.Fatalf("Tried using testrgw.config file, but got: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestGetRGWSvcs(t *testing.T) {
 			t.Errorf("%v should be 'peon9999' but is: '%v'", svcname, svc.Core.Type)
 		}
 		// and admin socket path
-		svcsock := "/var/run/ceph/radosgw.client.radosgw.peon9999"
+		svcsock := "./test_corpus/rgwsocks/radosgw.client.radosgw.peon9999"
 		if svc.Sock != svcsock {
 			t.Errorf("%v should have sock %v but is: '%v'", svcname, svcsock, svc.Sock)
 		}

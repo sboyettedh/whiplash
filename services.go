@@ -91,11 +91,11 @@ func (wlc *WLConfig) getCephServices() {
 				s.Sock = strings.Replace(m["admin socket"], "$name", k, 1)
 			}
 		case strings.HasPrefix(k, "mon." + os.Getenv("HOSTNAME")):
-			//s := &Svc{Type: MON, Host: wlc.CephConf[k]["host"], b1: make([]byte, 64)}
 			s.Core.Type = MON
 			s.Core.Host = wlc.CephConf[k]["host"]
 			s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
 		}
+		// only add defined services to Svcs when the admin socket exists
 		if _, err := os.Stat(s.Sock); err == nil {
 			s.Ping()
 			wlc.Svcs[k] = s

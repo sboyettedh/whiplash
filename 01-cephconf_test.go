@@ -28,7 +28,7 @@ func TestCephMonConf(t *testing.T) {
 		}
 	}
 	// then check an actual value to make sure it's all working
-	if cephconf["osd"]["admin socket"] != "/var/run/ceph/ceph-$name.asok" {
+	if cephconf["osd"]["admin socket"] != "./test_corpus/monsocks/ceph-$name.asok" {
 		t.Errorf("`admin socket` value not as expected: %v", cephconf["osd"]["admin socket"])
 	}
 }
