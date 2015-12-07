@@ -5,10 +5,12 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"firepear.net/aclient"
 	"github.com/sboyettedh/whiplash"
@@ -19,6 +21,15 @@ var (
 	hostname string
 	acconf *aclient.Config
 	req []byte
+	// which interval set to use for tickers
+	intv int
+	// the interval sets
+	intvs = []map[string]time.Duration{
+		{"ping": 11},
+		{"ping": 13},
+		{"ping": 17},
+		{"ping": 19},
+	}
 )
 
 func init() {
@@ -33,7 +44,6 @@ func clientInit(fn string) (chan os.Signal, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
 	log.SetOutput(f)
 	// write pidfile
 	pidstr := strconv.Itoa(os.Getpid()) + "\n"
@@ -48,12 +58,12 @@ func clientInit(fn string) (chan os.Signal, error) {
 }
 
 func main() {
+	flag.Parse()
 	sigchan, err := clientInit("whiplash-client")
 	if err != nil{
 		log.Fatal(err)
 	}
 
-	flag.Parse()
 	wl, err := whiplash.New(whipconf, true)
 	if err != nil {
 		log.Printf("%v: could not read configuration file: %v\n", os.Args[0], err)
@@ -65,6 +75,14 @@ func main() {
 		Addr: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
 		Timeout: 100,
 	}
+
+	// decide what notification interval to use
+	rand.Seed(time.Now().UnixNano())
+	intv = rand.Intn(len(intvs))
+	log.Printf("using interval set: %q\n", intvs[intv])
+	// create tickers and launch monitor funcs
+	pingticker := time.NewTicker(time.Second * intvs[intv]["ping"])
+	go pingSvcs(wl.Svcs, pingticker.C)
 
 	// mainloop
 	keepalive := true
@@ -83,7 +101,17 @@ func main() {
 	}
 }
 
-func sendData(acconf *aclient.Config, r *whiplash.Request) {
+func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
+	for _ = range tc {
+		for _, svc := range svcs {
+			svc.Ping()
+			log.Println("sending ping request")
+			sendData("ping", &whiplash.Request{Svc: svc.Core, Payload: nil})
+		}
+	}
+}
+
+func sendData(cmd string, r *whiplash.Request) {
 	ac, err := aclient.NewTCP(*acconf)
 	if err != nil {
 		log.Println(err)
@@ -95,11 +123,13 @@ func sendData(acconf *aclient.Config, r *whiplash.Request) {
 		log.Println(err)
 		return
 	}
-	resp, err := ac.Dispatch(jreq)
+	req := []byte(cmd)
+	req = append(req, 32)
+	req = append(req, jreq...)
+	resp, err := ac.Dispatch(req)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Println(string(resp))
 }
-

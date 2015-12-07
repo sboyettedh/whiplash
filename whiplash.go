@@ -36,5 +36,5 @@ type Request struct {
 
 	// Payload is the data accompanying the request. May be empty, as
 	// in a ping request.
-	Payload interface{} `Json:"payload"`
+	Payload interface{} `json:"payload"`
 }
