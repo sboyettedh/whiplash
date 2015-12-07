@@ -23,7 +23,6 @@ type Host struct {
 	ID int
 	Name string
 	Rack string
-	Weight int
 }
 
 // Request is the struct used for interchange between whiplash clients
