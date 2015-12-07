@@ -27,15 +27,19 @@ var (
 // SvcCore
 type SvcCore struct {
 	// Name is the name/ID of the service
-	Name string
+	Name string `json:"name"`
+
 	// Type is the service/daemon type: MON, RGW, OSD
-	Type int
+	Type int `json:"type"`
+
 	// Host is the machine where the service runs
-	Host string
+	Host string `json:"host"`
+
 	// Version is the Ceph version of the service.
-	Version string
+	Version string `json:"version"`
+
 	// Reporting shows if a service is contactable and responsive
-	Reporting bool
+	Reporting bool `json:"reporting"`
 }
 
 // Svc represents a Ceph service
@@ -123,6 +127,7 @@ func (s *Svc) Ping() {
 }
 
 // Query sends a request to a Ceph service and reads the result.
+// TODO replace this with a standard aclient instance after 0.19
 func (s *Svc) Query(req string) error {
 	// make sure we know this command
 	cmd, ok := cephcmds[req]

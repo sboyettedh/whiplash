@@ -17,14 +17,17 @@ import (
 var (
 	whipconf string
 	hostname string
+	acconf *aclient.Config
+	req []byte
 )
 
 func init() {
 	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.json", "Whiplash configuration file")
 	hostname, _ = os.LookupEnv("HOSTNAME")
+	req = []byte("osdupdate ")
 }
 
-func startup(fn string) (chan os.Signal, error) {
+func clientInit(fn string) (chan os.Signal, error) {
 	// set up logfile
 	f, err := os.Create("/var/log/" + fn + ".log")
 	if err != nil {
@@ -45,7 +48,7 @@ func startup(fn string) (chan os.Signal, error) {
 }
 
 func main() {
-	sigchan, err := startup("whiplash-client")
+	sigchan, err := clientInit("whiplash-client")
 	if err != nil{
 		log.Fatal(err)
 	}
@@ -57,60 +60,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	// we work with Svcs; these are for reporting
-	osds := make(map[string]*whiplash.Osd)
-
-	// ask known services what version of Ceph they're running
-	for svcname, svc := range wl.Svcs {
-		if svc.Reporting == false {
-			log.Printf("%v: not reporting: %v", svcname, svc.Err)
-			continue
-		}
-		switch svc.Type {
-		case whiplash.OSD:
-			var osderr string
-			if svc.Err == nil {
-				osderr = ""
-			} else {
-				osderr = svc.Err.Error()
-			}
-			osds[svcname] = &whiplash.Osd{
-				Host: hostname,
-				Version: svc.Version,
-				Reporting: svc.Reporting,
-				Err: osderr,
-			}
-		}
-	}
-
-	// set up the aclient configuration
-	acconf := aclient.Config{
+	// need an aclient configuration to talk to the aggregator with
+	acconf = &aclient.Config{
 		Addr: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
 		Timeout: 100,
 	}
-	// send our data
-	ac, err := aclient.NewTCP(acconf)
-	if err != nil {
-		log.Println(err)
-	}
-	defer ac.Close()
-	josd, err := json.Marshal(osds)
-	if err != nil {
-		log.Println(err)
-	}
-	req := []byte("osdupdate ")
-	req = append(req, josd...)
-	resp, err := ac.Dispatch(req)
-	if err != nil {
-		log.Println(err)
-	}
-	log.Println(string(resp))
 
-	// the mainloop
+	// mainloop
 	keepalive := true
 	for keepalive {
 		select {
-		case <- sigchan:
+		case <-sigchan:
 			// we've trapped a signal from the OS. tell our Asock to
 			// shut down, but don't exit the eventloop because we want
 			// to handle the Msgs which will be incoming.
@@ -121,5 +81,25 @@ func main() {
 		// it to be nonblocking. and that would cause main() to exit
 		// immediately.
 	}
+}
+
+func sendData(acconf *aclient.Config, r *whiplash.Request) {
+	ac, err := aclient.NewTCP(*acconf)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer ac.Close()
+	jreq, err := json.Marshal(r)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	resp, err := ac.Dispatch(jreq)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println(string(resp))
 }
 
