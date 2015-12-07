@@ -42,8 +42,8 @@ type Request struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-// OSD holds data specific to OSD services.
-type OSD struct {
+// OSDsvc holds data specific to OSD services.
+type OSDsvc struct {
 	// Weight is the crush weight of the OSD.
 	Weight float32
 	// Cap is the percentage of OSD storage capacity used.
