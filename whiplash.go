@@ -1,5 +1,9 @@
 package whiplash // github.com/sboyettedh/whiplash
 
+import (
+	"encoding/json"
+)
+
 const (
 	Version = "0.1.0"
 )
@@ -35,7 +39,7 @@ type Request struct {
 
 	// Payload is the data accompanying the request. May be empty, as
 	// in a ping request.
-	Payload interface{} `json:"payload"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 // OSD holds data specific to OSD services.
