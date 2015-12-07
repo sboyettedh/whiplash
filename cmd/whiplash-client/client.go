@@ -63,6 +63,7 @@ func main() {
 	if err != nil{
 		log.Fatal(err)
 	}
+	log.Printf("whiplash-client v%v beginning operations\n", whiplash.Version)
 
 	wl, err := whiplash.New(whipconf, true)
 	if err != nil {
