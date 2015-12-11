@@ -57,6 +57,7 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Printf("whiplash-aggregator v%v beginning operations\n", whiplash.Version)
+	log.Printf("asock version %s\n", asock.Version)
 
 	wl, err := whiplash.New(whipconf, false)
 	if err != nil {

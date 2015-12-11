@@ -1,14 +1,16 @@
 package whiplash
 
 import (
-	"bytes"
-	"encoding/binary"
+//	"net"
+//	"time"
+//	"bytes"
+//	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"net"
 	"os"
 	"strings"
-	"time"
+
+	"firepear.net/aclient"
 )
 
 // These are our Svc types, which are basically the types of ceph
@@ -20,7 +22,7 @@ const (
 )
 
 var (
-	// this is the list of admin socket commands we know
+	// the list of admin socket commands we know
 	cephcmds = map[string][]byte{"version": []byte("{\"prefix\":\"version\"}\000")}
 )
 
@@ -55,6 +57,8 @@ type Svc struct {
 	// Resp receives response data from Query()
 	Resp []byte
 
+	// configuration for connections to the admin socket
+	acconf *aclient.Config
 	// b0 is where we read the message length into
 	b0 []byte
 	// mlen is the unpacked length from b0
@@ -97,7 +101,7 @@ func (wlc *WLConfig) getCephServices() {
 		}
 		// only add defined services to Svcs when the admin socket exists
 		if _, err := os.Stat(s.Sock); err == nil {
-			s.Ping()
+			s.acconf = &aclient.Config{Addr: s.Sock, Timeout: 100, NoPrefix: true}
 			wlc.Svcs[k] = s
 		}
 	}
@@ -136,55 +140,15 @@ func (s *Svc) Query(req string) error {
 	}
 
 	// make the connection
-	conn, err := net.Dial("unix", s.Sock)
+	c, err := aclient.NewUnix(*s.acconf)
 	if err != nil {
-		return fmt.Errorf("could not connect to sock %v: %v\n", s.Sock, err)
+		return fmt.Errorf("could not connect to sock %s: %s\n", s.Sock, err)
 	}
-	defer conn.Close()
+	defer c.Close()
 
-	// send command to the admin socket
-	conn.SetDeadline(time.Now().Add(250 * time.Millisecond))
-	_, err = conn.Write(cmd)
+	s.Resp, err = c.Dispatch(cmd)
 	if err != nil {
-		return fmt.Errorf("could not write to %v: %v\n", s.Sock, err)
+		return fmt.Errorf("could not read reply on %s: %s\n", s.Sock, err)
 	}
-
-	// zero our byte-collectors and bytes-read counter
-	s.b1 = make([]byte, 64)
-	s.b2 = s.b2[:0]
-	s.mread = 0
-
-	// get the response message length
-	conn.SetDeadline(time.Now().Add(250 * time.Millisecond))
-	n, err := conn.Read(s.b0)
-	if err != nil {
-		return fmt.Errorf("could not read message length on %v: %v\n", s.Sock, err)
-	}
-	if  n != 4 {
-		return fmt.Errorf("too few bytes (%v) in message length on %v: %v\n", n, s.Sock, err)
-	}
-	buf := bytes.NewReader(s.b0)
-	err = binary.Read(buf, binary.BigEndian, &s.mlen)
-	if err != nil {
-		return fmt.Errorf("could not decode message length on %v: %v\n", s.Sock, err)
-	}
-
-	// and read the message
-	for {
-		if s.mread == s.mlen {
-			break
-		}
-		if x := s.mlen - s.mread; x < 64 {
-			s.b1 = make([]byte, x)
-		}
-		conn.SetDeadline(time.Now().Add(250 * time.Millisecond))
-		n, err := conn.Read(s.b1)
-		if err != nil && err.Error() != "EOF" {
-			return fmt.Errorf("could not read from %v: %v\n", s.Sock, err)
-		}
-		s.mread += int32(n)
-		s.b2 = append(s.b2, s.b1[:n]...)
-	}
-	s.Resp = s.b2[:s.mlen]
 	return err
 }

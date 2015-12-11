@@ -62,6 +62,7 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Printf("whiplash-client v%v beginning operations\n", whiplash.Version)
+	log.Printf("aclient version %s\n", aclient.Version)
 
 	wl, err := whiplash.New(whipconf, true)
 	if err != nil {
@@ -104,6 +105,10 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 	for _ = range tc {
 		for _, svc := range svcs {
 			svc.Ping()
+			if svc.Err != nil {
+				log.Println("ping failed:", svc.Core.Name, svc.Err)
+				continue
+			}
 			log.Println("sending ping request")
 			tmpPayload, _ := json.Marshal(nil) // TODO this'll go away
 											   // when we have per-svc
