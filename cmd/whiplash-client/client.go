@@ -3,13 +3,9 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
-	"os/signal"
-	"strconv"
-	"syscall"
 	"time"
 
 	"firepear.net/aclient"
@@ -36,28 +32,9 @@ func init() {
 	hostname, _ = os.LookupEnv("HOSTNAME")
 }
 
-func clientInit(fn string) (chan os.Signal, error) {
-	// set up logfile
-	f, err := os.Create("/var/log/" + fn + ".log")
-	if err != nil {
-		return nil, err
-	}
-	log.SetOutput(f)
-	// write pidfile
-	pidstr := strconv.Itoa(os.Getpid()) + "\n"
-	err = ioutil.WriteFile("/var/run/" + fn + ".pid", []byte(pidstr), 0644)
-	if err != nil {
-		return nil, err
-	}
-	// and register SIGINT/SIGTERM handler
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-	return sigchan, err
-}
-
 func main() {
 	flag.Parse()
-	sigchan, err := clientInit("whiplash-client")
+	sigchan, err := whiplash.AppSetup("whiplash-client")
 	if err != nil{
 		log.Fatal(err)
 	}
