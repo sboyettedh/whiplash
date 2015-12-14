@@ -28,20 +28,19 @@ var (
 )
 
 func init() {
-	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.json", "Whiplash configuration file")
+	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.conf", "Whiplash configuration file")
 	hostname, _ = os.LookupEnv("HOSTNAME")
 }
 
 func main() {
 	flag.Parse()
+	wl, err := whiplash.New(whipconf, true)
+	if err != nil {
+		log.Fatalf("error reading configuration file: %v\n", err)
+	}
 	sigchan := whiplash.AppSetup("whiplash-client", "0.2.0", aclient.Version)
 	defer whiplash.AppCleanup("whiplash")
 
-	wl, err := whiplash.New(whipconf, true)
-	if err != nil {
-		log.Printf("%v: could not read configuration file: %v\n", os.Args[0], err)
-		os.Exit(1)
-	}
 
 	// need an aclient configuration to talk to the aggregator with
 	acconf = &aclient.Config{

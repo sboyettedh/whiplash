@@ -29,12 +29,16 @@ type WLConfig struct {
 
 // WLAggConfig is the Whiplash aggregator configuration.
 type WLAggConfig struct {
+	// BindAddr is the address the aggregator should bind to.
 	BindAddr string `json:"bind_addr"`
+	// BindPort is the port to bind to on BindAddr
 	BindPort string `json:"bind_port"`
+	// MsgLvl sets the Asock.Config Msglvl parameter. Valid: "all",
+	// "conn", "error", "fatal".
+	MsgLvl string `json:"msglvl"`
 }
 
-// WLAgtConfig is the Whiplash agent configuration. Presently, it is
-// nil.
+// WLAgtConfig is the Whiplash agent configuration.
 type WLAgtConfig struct {
 }
 
@@ -68,6 +72,10 @@ func (wlc *WLConfig) getConfig(wlconf string, gensvcs bool) (error) {
 	}
 	if wlc.Aggregator.BindAddr == "" {
 		return fmt.Errorf("No aggregator address found in `%v`", wlc.CephConfLoc)
+	}
+	ml := wlc.Aggregator.MsgLvl
+	if ml != "all" && ml != "conn" && ml != "error" && ml != "fatal" {
+		return fmt.Errorf("Aggregator.Msglvl must be one of 'all', 'conn', 'error', 'fatal'")
 	}
 	if gensvcs {
 		wlc.CephConf, err = parseCephConf(wlc.CephConfLoc)

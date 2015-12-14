@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"log"
-	"os"
 
 	"firepear.net/asock"
 	"github.com/sboyettedh/whiplash"
@@ -23,24 +22,36 @@ var (
 )
 
 func init() {
-	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.json", "Whiplash configuration file")
+	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.conf", "Whiplash configuration file")
 }
 
 func main() {
-	// parse flags and read the whiplash configuration
+	// parse flags
 	flag.Parse()
+	// read the whiplash configuration
+	wl, err := whiplash.New(whipconf, false)
+	if err != nil {
+		log.Fatalf("error reading configuration file: %v\n", err)
+	}
+	// and do application initialization
 	sigchan := whiplash.AppSetup("whiplash", "0.2.0", asock.Version)
 	defer whiplash.AppCleanup("whiplash")
 
-	wl, err := whiplash.New(whipconf, false)
-	if err != nil {
-		log.Fatalf("could not read configuration file: %v\n", err)
-		os.Exit(1)
+	// start networking
+	var msglvl int
+	switch wl.Aggregator.MsgLvl {
+	case "all":
+		msglvl = asock.All
+	case "conn":
+		msglvl = asock.Conn
+	case "error":
+		msglvl = asock.Error
+	case "fatal":
+		msglvl = asock.Fatal
 	}
-
 	asconf := asock.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
-		Msglvl: asock.All,
+		Msglvl: msglvl,
 		Timeout: 100,
 	}
 	as, err := asock.NewTCP(asconf)
