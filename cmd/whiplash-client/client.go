@@ -35,6 +35,7 @@ func init() {
 func main() {
 	flag.Parse()
 	sigchan := whiplash.AppSetup("whiplash-client", "0.2.0", asock.Version)
+	defer whiplash.AppCleanup("whiplash")
 
 	wl, err := whiplash.New(whipconf, true)
 	if err != nil {

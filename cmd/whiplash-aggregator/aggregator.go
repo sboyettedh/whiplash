@@ -30,6 +30,7 @@ func main() {
 	// parse flags and read the whiplash configuration
 	flag.Parse()
 	sigchan := whiplash.AppSetup("whiplash", "0.2.0", asock.Version)
+	defer whiplash.AppCleanup("whiplash")
 
 	wl, err := whiplash.New(whipconf, false)
 	if err != nil {
