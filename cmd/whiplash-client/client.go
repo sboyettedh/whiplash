@@ -34,12 +34,7 @@ func init() {
 
 func main() {
 	flag.Parse()
-	sigchan, err := whiplash.AppSetup("whiplash-client")
-	if err != nil{
-		log.Fatal(err)
-	}
-	log.Printf("whiplash-client v%v beginning operations\n", whiplash.Version)
-	log.Printf("aclient version %s\n", aclient.Version)
+	sigchan := whiplash.AppSetup("whiplash-client", "0.2.0", asock.Version)
 
 	wl, err := whiplash.New(whipconf, true)
 	if err != nil {
