@@ -37,7 +37,7 @@ func AppSetup(appname, appver, asockver string) (chan os.Signal) {
 	log.SetOutput(f)
 	// write startup messages
 	log.Printf("====================================== %s %s beginning operations\n", appname, appver)
-	log.Printf("asock lib v%s; whiplash lib v%s\n", asockver, Version)
+	log.Printf("asock/client v%s; whiplash lib v%s\n", asockver, Version)
 
 	// write new pidfile
 	pidstr := strconv.Itoa(os.Getpid()) + "\n"
