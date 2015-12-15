@@ -1,4 +1,18 @@
-0.1.0 - 2015-10-XX
+0.2.0 - 2015-12-xx
+---------------------------------------------------------------------
+
+    * wlq, the Whiplash query tool introduced
+
+    * Unified netcode (no more custom code for talking to Ceph)
+
+    * Improved logging and pidfile handling
+
+    * Better documentation; golint and 'go vet' run cleanly
+
+
+0.1.0 - 2015-12-07
 ---------------------------------------------------------------------
 
     * Initial implementation of agent and aggregator
+
+    * Things basically work now
