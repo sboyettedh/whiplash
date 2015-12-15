@@ -33,6 +33,8 @@ type WLAggConfig struct {
 	BindAddr string `json:"bind_addr"`
 	// BindPort is the port to bind to on BindAddr
 	BindPort string `json:"bind_port"`
+	// QueryPort is the port the query listener binds to
+	QueryPort string `json:"bind_port"`
 	// MsgLvl sets the Asock.Config Msglvl parameter. Valid: "all",
 	// "conn", "error", "fatal".
 	MsgLvl string `json:"msglvl"`
@@ -72,6 +74,9 @@ func (wlc *WLConfig) getConfig(wlconf string, gensvcs bool) (error) {
 	}
 	if wlc.Aggregator.BindAddr == "" {
 		return fmt.Errorf("No aggregator address found in `%v`", wlc.CephConfLoc)
+	}
+	if wlc.Aggregator.BindPort == wlc.Aggregator.QueryPort {
+		return fmt.Errorf("BindPort and QueryPort can't have the same value")
 	}
 	ml := wlc.Aggregator.MsgLvl
 	if ml != "all" && ml != "conn" && ml != "error" && ml != "fatal" {

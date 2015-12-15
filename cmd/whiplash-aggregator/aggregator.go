@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"log"
 
@@ -37,7 +36,8 @@ func main() {
 	sigchan := whiplash.AppSetup("whiplash", "0.2.0", asock.Version)
 	defer whiplash.AppCleanup("whiplash")
 
-	// start networking
+	// setup the client asock instance. first set the msglvl, then
+	// instantiate the asock.
 	var msglvl int
 	switch wl.Aggregator.MsgLvl {
 	case "all":
@@ -54,28 +54,45 @@ func main() {
 		Msglvl: msglvl,
 		Timeout: 100,
 	}
-	as, err := asock.NewTCP(asconf)
+	cas, err := asock.NewTCP(asconf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("listening for clients")
-
-	// set up command handlers
+	// and add command handlers to the asock instance
 	handlers := map[string]asock.DispatchFunc{
 		"ping": pingHandler,
 	}
 	for name, handler := range handlers {
-		err = as.AddHandler(name, "nosplit", handler)
+		err = cas.AddHandler(name, "nosplit", handler)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	// create a channel for the asock Msgr handler and launch it
-	msgchan := make(chan error, 1)
-	go msgHandler(as, msgchan)
+	// now setup the query asock instance
+	asconf = asock.Config{
+		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.QueryPort,
+		Msglvl: msglvl,
+		Timeout: 100,
+	}
+	qas, err := asock.NewTCP(asconf)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// add command handlers to the query asock instance
+	// eventually
+	log.Println("listening for clients")
 
-	// the mainloop
+
+	// create a channel for the client asock Msgr handler
+	msgchan := make(chan error, 1)
+	// and one for the query Msgr handler
+	querychan := make(chan error, 1)
+	// and launch them
+	go msgHandler(cas, msgchan)
+	go msgHandler(qas, querychan)
+
+	// this is the mainloop of the application.
 	keepalive := true
 	for keepalive {
 		select {
@@ -92,6 +109,13 @@ func main() {
 			log.Println(msg)
 			keepalive = false
 			break
+		case msg := <-querychan:
+			// the query handler has died. it should be safe to
+			// restart.
+			log.Println("Query asock instance has shut down. Last Msg received was:")
+			log.Println(msg)
+			log.Println("Restarting query asock...")
+			// TODO what it says ^^there
 		case <- sigchan:
 			// we've trapped a signal from the OS. tell our Asock to
 			// shut down, but don't exit the eventloop because we want
@@ -131,24 +155,4 @@ func msgHandler(as *asock.Asock, msgchan chan error) {
 			log.Println(msg)
 		}
 	}
-}
-
-func pingHandler(args [][]byte) ([]byte, error) {
-	req := &whiplash.Request{}
-	json.Unmarshal(args[0], req)
-	if svc, ok := svcs[req.Svc.Name]; !ok {
-		log.Printf("adding svc %v", req.Svc.Name)
-		// add sercice to svcs
-		svcs[req.Svc.Name] = req.Svc
-		// and to svcmap
-		if _, ok := svcmap[req.Svc.Host]; !ok {
-			log.Printf("adding host %v", req.Svc.Host)
-			svcmap[req.Svc.Host] = []string{}
-		}
-		svcmap[req.Svc.Host] = append(svcmap[req.Svc.Host], req.Svc.Name)
-	} else {
-		// TODO handle updates
-		log.Printf("got update from %v", svc.Name)
-	}
-	return []byte("ok"), nil
 }
