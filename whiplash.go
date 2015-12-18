@@ -29,10 +29,10 @@ type Host struct {
 	Rack string
 }
 
-// Request is the struct used for interchange between whiplash clients
+// ClientRequest is the struct used for interchange between whiplash clients
 // and the aggregator. Each network request consists of the request
 // name followed by whitespace followed by a JSON-encoded Request.
-type Request struct {
+type ClientRequest struct {
 	// Svc is the core identifying and status info about the service
 	// making the request.
 	Svc *SvcCore `json:"svc"`
@@ -48,4 +48,12 @@ type OSDsvc struct {
 	Weight float32
 	// Cap is the percentage of OSD storage capacity used.
 	Cap float32
+}
+
+type QueryResponse struct {
+	Code int `json:"code"`
+	Cmd string `json:"cmd"`
+	Subcmd string `json:"subcmd"`
+	Args []string `json:"args"`
+	Data json.RawMessage `json:"data"`
 }

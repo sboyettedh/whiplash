@@ -80,7 +80,15 @@ func main() {
 		log.Fatal(err)
 	}
 	// add command handlers to the query asock instance
-	// eventually
+	handlers = map[string]asock.DispatchFunc{
+		"echo": echoQHandler,
+	}
+	for name, handler := range handlers {
+		err = cas.AddHandler(name, "split", handler)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 	log.Println("listening for clients")
 
 
@@ -121,7 +129,7 @@ func main() {
 			// shut down, but don't exit the eventloop because we want
 			// to handle the Msgs which will be incoming.
 			log.Println("OS signal received; shutting down")
-			as.Quit()
+			cas.Quit()
 		}
 		// there's no default case in the select, as that would cause
 		// it to be nonblocking. and that would cause main() to exit

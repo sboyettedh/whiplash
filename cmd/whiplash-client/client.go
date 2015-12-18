@@ -85,12 +85,12 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 			tmpPayload, _ := json.Marshal(nil) // TODO this'll go away
 											   // when we have per-svc
 											   // data flowing
-			sendData("ping", &whiplash.Request{Svc: svc.Core, Payload: tmpPayload})
+			sendData("ping", &whiplash.ClientRequest{Svc: svc.Core, Payload: tmpPayload})
 		}
 	}
 }
 
-func sendData(cmd string, r *whiplash.Request) {
+func sendData(cmd string, r *whiplash.ClientRequest) {
 	ac, err := aclient.NewTCP(*acconf)
 	if err != nil {
 		log.Println(err)
