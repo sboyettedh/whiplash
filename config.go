@@ -34,7 +34,7 @@ type WLAggConfig struct {
 	// BindPort is the port to bind to on BindAddr
 	BindPort string `json:"bind_port"`
 	// QueryPort is the port the query listener binds to
-	QueryPort string `json:"bind_port"`
+	QueryPort string `json:"query_port"`
 	// MsgLvl sets the Asock.Config Msglvl parameter. Valid: "all",
 	// "conn", "error", "fatal".
 	MsgLvl string `json:"msglvl"`

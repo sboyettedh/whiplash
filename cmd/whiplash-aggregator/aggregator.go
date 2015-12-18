@@ -84,7 +84,7 @@ func main() {
 		"echo": echoQHandler,
 	}
 	for name, handler := range handlers {
-		err = cas.AddHandler(name, "split", handler)
+		err = qas.AddHandler(name, "split", handler)
 		if err != nil {
 			log.Fatal(err)
 		}
