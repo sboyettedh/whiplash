@@ -14,8 +14,8 @@ type WLConfig struct {
 	// Aggregator config
 	Aggregator WLAggConfig `json:"aggregator"`
 
-	// Agent config
-	Agent WLAgtConfig `json:"agent"`
+	// Client config
+	Client WLAgtConfig `json:"client"`
 
 	// Location of the Ceph configuration file
 	CephConfLoc string `json:"cephconf_loc"`
