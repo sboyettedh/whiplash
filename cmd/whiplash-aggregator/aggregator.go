@@ -68,6 +68,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+	log.Println("client asock instantiated")
 
 	// now setup the query asock instance
 	asconf = asock.Config{
@@ -89,7 +90,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	log.Println("listening for clients")
+	log.Println("query asock instantiated")
 
 
 	// create a channel for the client asock Msgr handler
@@ -99,6 +100,8 @@ func main() {
 	// and launch them
 	go msgHandler(cas, msgchan)
 	go msgHandler(qas, querychan)
+	log.Println("aggregator now listening")
+
 
 	// this is the mainloop of the application.
 	keepalive := true
