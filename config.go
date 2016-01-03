@@ -15,7 +15,7 @@ type WLConfig struct {
 	Aggregator WLAggConfig `json:"aggregator"`
 
 	// Client config
-	Client WLAgtConfig `json:"client"`
+	Client WLCliConfig `json:"client"`
 
 	// Location of the Ceph configuration file
 	CephConfLoc string `json:"cephconf_loc"`
@@ -40,8 +40,8 @@ type WLAggConfig struct {
 	MsgLvl string `json:"msglvl"`
 }
 
-// WLAgtConfig is the Whiplash agent configuration.
-type WLAgtConfig struct {
+// WLCliConfig is the Whiplash agent configuration.
+type WLCliConfig struct {
 }
 
 // NewConfig returns a populated Whiplash configuration. `wlconf` is

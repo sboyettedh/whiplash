@@ -1,4 +1,15 @@
-0.2.0 - 2015-12-xx
+0.3.0 - 2015-12-xx
+---------------------------------------------------------------------
+
+    * wlq now has `-j` flag, which outputs query responses as raw JSON
+      instead of pretty-printed reports.
+
+    * wlq no longer panics on error conditions (better UX)
+
+    * aggregator now logs startup of the query listener
+
+
+0.2.0 - 2015-12-19
 ---------------------------------------------------------------------
 
     * wlq, the Whiplash query tool introduced

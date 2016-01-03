@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"firepear.net/aclient"
@@ -12,10 +13,12 @@ import (
 
 var (
 	whipconf string
+	dumpjson bool
 )
 
 func init() {
 	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.conf", "Whiplash configuration file")
+	flag.BoolVar(&dumpjson, "j", false, "Output query response as raw JSON")
 }
 
 func main() {
@@ -26,7 +29,7 @@ func main() {
 	// machine running a query.
 	wl, err := whiplash.New(whipconf, false)
 	if err != nil {
-		log.Fatalf("error reading configuration file: %v\n", err)
+		log.Fatalf("error reading configuration file: %s\n", err)
 	}
 	flag.Parse()
 
@@ -37,7 +40,7 @@ func main() {
 	}
 	c, err := aclient.NewTCP(acconf)
 	if err != nil {
-		panic(err)
+		log.Fatalf("error creating network connection: %s", err)
 	}
 	defer c.Close()
 
@@ -47,9 +50,15 @@ func main() {
 	// and dispatch it to the server!
 	resp, err := c.Dispatch([]byte(req))
 	if err != nil {
-		panic(err)
+		log.Fatalf("error creating network connection: %s", err)
 	}
 
-	// print out what we got back and exit
-	fmt.Println(string(resp))
+	// if -j has been specified, print the raw response and exit
+	if dumpjson {
+		fmt.Println(string(resp))
+		os.Exit(0)
+	}
+
+	// else, we have to hand off to a pretty-printing routine
+	// TODO write a pretty-printing routine
 }
