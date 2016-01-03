@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -48,14 +49,24 @@ func main() {
 	req := strings.Join(flag.Args(), " ")
 
 	// and dispatch it to the server!
-	resp, err := c.Dispatch([]byte(req))
+	respj, err := c.Dispatch([]byte(req))
 	if err != nil {
 		log.Fatalf("error creating network connection: %s", err)
 	}
 
-	// if -j has been specified, print the raw response and exit
+	// vivify response and handle errors
+	resp := new(whiplash.QueryResponse)
+	err = json.Unmarshal(respj, &resp)
+	if err != nil {
+		log.Fatalf("error unmarshaling json\nresponse: '%s'", string(respj))
+	}
+	if resp.Code >= 400 {
+		log.Fatalf("there was a problem with the request:\n%s", string(respj))
+	}
+
+	// if -j has been specified, print the raw response data and exit
 	if dumpjson {
-		fmt.Println(string(resp))
+		fmt.Println(string(resp.Data))
 		os.Exit(0)
 	}
 

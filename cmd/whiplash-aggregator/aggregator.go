@@ -82,7 +82,7 @@ func main() {
 	}
 	// add command handlers to the query asock instance
 	handlers = map[string]asock.DispatchFunc{
-		"echo": echoQHandler,
+		"echo": qhEcho,
 	}
 	for name, handler := range handlers {
 		err = qas.AddHandler(name, "split", handler)
