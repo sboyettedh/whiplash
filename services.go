@@ -123,6 +123,9 @@ func (s *Svc) Ping() {
 	s.Core.Version = vs.Version
 }
 
+// Stat is the wrapper function for performing Svc stat updates. It
+// handles commonalities and then calls the service-appropriate stat
+// function to gather data.
 func (s *Svc) Stat() json.RawMessage {
 	err := s.Query("perf dump")
 	if err != nil {
@@ -138,19 +141,23 @@ func (s *Svc) Stat() json.RawMessage {
 	return statdata
 }
 
+// StatOsd is the OSD-specific stat update data gathering routine.
 func (s *Svc) StatOsd() json.RawMessage {
 	var os OsdStat
 	var pd cephOsdPerfDump
+	// vivify the osd section of the perf dump
 	err := json.Unmarshal(s.Resp, &pd)
 	if err != nil {
 		s.Err = err
 		return nil
 	}
-	var raw json.RawMessage
+	// gather data from it
 	os.BytesUsed = pd.Osd.StatBytes
 	os.BytesAvail = pd.Osd.StatBytesAvail
 	os.PgPrimary = pd.Osd.NumPgPrimary
 	os.PgReplica = pd.Osd.NumPgReplica
+	// and json-encode our stat struct
+	var raw json.RawMessage
 	raw, err = json.Marshal(os)
 	if err != nil {
 		s.Err = err

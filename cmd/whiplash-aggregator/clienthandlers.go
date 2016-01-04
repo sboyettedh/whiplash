@@ -7,6 +7,10 @@ import (
 	"github.com/sboyettedh/whiplash"
 )
 
+// These functions are the handlers for whiplash-aggregator's client
+// side asock instance.
+
+// pingHandler accepts and processes ping updates.
 func pingHandler(args [][]byte) ([]byte, error) {
 	upd := &whiplash.ClientUpdate{}
 	err := json.Unmarshal(args[0], upd)
@@ -34,6 +38,7 @@ func pingHandler(args [][]byte) ([]byte, error) {
 	return success, nil
 }
 
+// statHandler accepts and processes stat updates.
 func statHandler(args [][]byte) ([]byte, error) {
 	upd := &whiplash.ClientUpdate{}
 	// unpack the update
