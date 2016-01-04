@@ -80,13 +80,13 @@ type CephOsdPerfDump struct {
 	Filestore json.RawMessage `json:"filestore"`
 	LevelDB json.RawMessage `json:"leveldb"`
 	MutexFJCL json.RawMessage `json:"mutex-FileJournal::completions_lock"`
-	Mutex json.RawMessage `json:"mutex-FileJournal::finisher_lock"`
-	Mutex json.RawMessage `json:"mutex-FileJournal::write_lock"`
-	Mutex json.RawMessage `json:"mutex-FileJournal::writeq_lock"`
-	Mutex json.RawMessage `json:"mutex-JOS::ApplyManager::apply_lock"`
-	Mutex json.RawMessage `json:"mutex-JOS::ApplyManager::com_lock"`
-	Mutex json.RawMessage `json:"mutex-JOS::SubmitManager::lock"`
-	Mutex json.RawMessage `json:"mutex-WBThrottle::lock"`
+	MutexFJFL json.RawMessage `json:"mutex-FileJournal::finisher_lock"`
+	MutexFJWL json.RawMessage `json:"mutex-FileJournal::write_lock"`
+	MutexFHWQL json.RawMessage `json:"mutex-FileJournal::writeq_lock"`
+	MutexJAMAL json.RawMessage `json:"mutex-JOS::ApplyManager::apply_lock"`
+	MutexJAMCL json.RawMessage `json:"mutex-JOS::ApplyManager::com_lock"`
+	MutexJSML json.RawMessage `json:"mutex-JOS::SubmitManager::lock"`
+	MutexWBTL json.RawMessage `json:"mutex-WBThrottle::lock"`
 	Objecter json.RawMessage `json:"objecter"`
 	// Osd is currently the only thing we care about in here. It holds
 	// tons of data about how the OSD is currently looking.
