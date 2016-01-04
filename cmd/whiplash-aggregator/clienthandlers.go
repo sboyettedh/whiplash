@@ -8,7 +8,7 @@ import (
 )
 
 func pingHandler(args [][]byte) ([]byte, error) {
-	req := &whiplash.ClientRequest{}
+	req := &whiplash.ClientUpdate{}
 	json.Unmarshal(args[0], req)
 	if svc, ok := svcs[req.Svc.Name]; !ok {
 		log.Printf("adding svc %v", req.Svc.Name)

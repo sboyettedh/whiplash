@@ -22,17 +22,17 @@ var (
 	intv int
 	// the interval sets
 	intvs = []map[string]time.Duration{
-		{"ping": 11},
-		{"ping": 13},
-		{"ping": 17},
-		{"ping": 19},
+		{"ping": 11, "stat": 313},
+		{"ping": 13, "stat": 311},
+		{"ping": 17, "stat": 307},
+		{"ping": 19, "stat": 293},
 	}
 )
 
 func init() {
 	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.conf", "Whiplash configuration file")
 	hostname, _ = os.LookupEnv("HOSTNAME")
-	nilPayload, _ := json.Marshal(nil)
+	nilPayload, _ = json.Marshal(nil)
 }
 
 func main() {
@@ -57,7 +57,9 @@ func main() {
 	log.Printf("using interval set: %q\n", intvs[intv])
 	// create tickers and launch monitor funcs
 	pingticker := time.NewTicker(time.Second * intvs[intv]["ping"])
+	statticker := time.NewTicker(time.Second * intvs[intv]["stat"])
 	go pingSvcs(wl.Svcs, pingticker.C)
+	go pingSvcs(wl.Svcs, statticker.C)
 
 	// mainloop
 	keepalive := true
@@ -76,21 +78,52 @@ func main() {
 	}
 }
 
+
+// pingScvs, running on the ticker channel `tc`, polls each service on
+// this node. this is a basic check for being alive, based on doing a
+// version request. it then reports to the aggregator.
 func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
+	// every tick...
 	for _ = range tc {
+		// loop over known services
 		for _, svc := range svcs {
+			// ping, then send data if there are no issues
 			svc.Ping()
 			if svc.Err != nil {
 				log.Println("ping failed:", svc.Core.Name, svc.Err)
 				continue
 			}
 			log.Println("sending ping request")
-			sendData("ping", &whiplash.ClientRequest{Svc: svc.Core, Payload: nilPayload})
+			sendData("ping", &whiplash.ClientUpdate{
+				Time: time.Now(),
+				Svc: svc.Core,
+				Payload: nilPayload,
+			})
 		}
 	}
 }
 
-func sendData(cmd string, r *whiplash.ClientRequest) {
+func statSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
+	var statdata json.RawMessage
+	for _ = range tc {
+		for _, svc := range svcs {
+			statdata = svc.Stat()
+			// TODO handle MONs and RGWs
+			if svc.Err != nil {
+				log.Println("ping failed:", svc.Core.Name, svc.Err)
+				continue
+			}
+			log.Println("sending ping request")
+			sendData("stat", &whiplash.ClientUpdate{
+				Time: time.Now(),
+				Svc: svc.Core,
+				Payload: statdata,
+			})
+		}
+	}
+}
+
+func sendData(cmd string, r *whiplash.ClientUpdate) {
 	ac, err := aclient.NewTCP(*acconf)
 	if err != nil {
 		log.Println(err)
