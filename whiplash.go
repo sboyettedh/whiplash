@@ -37,7 +37,7 @@ type Host struct {
 type ClientUpdate struct {
 	// Time is the timestamp when the update was sent
 	Time time.Time
-	
+
 	// Svc is the core identifying and status info about the service
 	// making the request.
 	Svc *SvcCore `json:"svc"`

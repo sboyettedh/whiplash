@@ -93,7 +93,6 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 				log.Println("ping failed:", svc.Core.Name, svc.Err)
 				continue
 			}
-			log.Println("sending ping request")
 			sendData("ping", &whiplash.ClientUpdate{
 				Time: time.Now(),
 				Svc: svc.Core,
@@ -103,6 +102,8 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 	}
 }
 
+// statSvcs performs a more in-depth status check on services. it
+// operates nearly identically to pingSvcs.
 func statSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 	var statdata json.RawMessage
 	for _ = range tc {
@@ -113,7 +114,6 @@ func statSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 				log.Println("ping failed:", svc.Core.Name, svc.Err)
 				continue
 			}
-			log.Println("sending ping request")
 			sendData("stat", &whiplash.ClientUpdate{
 				Time: time.Now(),
 				Svc: svc.Core,
@@ -123,25 +123,29 @@ func statSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 	}
 }
 
-func sendData(cmd string, r *whiplash.ClientUpdate) {
+// sendData handles the actual sending of data to the aggregator.
+func sendData(cmd string, u *whiplash.ClientUpdate) {
+	// create a new aclient instance
 	ac, err := aclient.NewTCP(*acconf)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	defer ac.Close()
-	jreq, err := json.Marshal(r)
+	// success, so turn the update into json
+	jupdate, err := json.Marshal(u)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	req := []byte(cmd)
 	req = append(req, 32)
-	req = append(req, jreq...)
+	req = append(req, jupdate...)
+	log.Println("sending update:", cmd)
 	resp, err := ac.Dispatch(req)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	log.Println(string(resp))
+	log.Println("got response:", string(resp))
 }
