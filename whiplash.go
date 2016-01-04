@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	// Version is the whiplash library version number.
 	Version = "0.3.0"
 )
 
@@ -73,9 +74,14 @@ type OsdSvc struct {
 	PgReplica int
 }
 
-// CephOsdPerfDump represents the output of passing 'perf dump' to an
+// cephVersion represents the output of passing 'version' to a ceph admin daemon.
+type cephVersion struct {
+	Version string `json:"version"`
+}
+
+// cephOsdPerfDump represents the output of passing 'perf dump' to an
 // OSD admin daemon.
-type CephOsdPerfDump struct {
+type cephOsdPerfDump struct {
 	WBThrottle json.RawMessage `json:"WBThrottle"`
 	Filestore json.RawMessage `json:"filestore"`
 	LevelDB json.RawMessage `json:"leveldb"`
@@ -106,8 +112,8 @@ type CephOsdPerfDump struct {
 	ThrottleOsdCM json.RawMessage `json:"throttle-osd_client_messages"`
 }
 
-// CephOsdPerfDumpOsd is the "osd" section of the output of "perf dump"
-type CephOsdPerfDumpOsd struct {
+// cephOsdPerfDumpOsd is the "osd" section of the output of "perf dump"
+type cephOsdPerfDumpOsd struct {
 	OpWip int `json:"op_wip"`
 	Op int `json:"op"`
 	OpInBytes int `json:"op_in_bytes"`

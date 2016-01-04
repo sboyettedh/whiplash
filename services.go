@@ -26,24 +26,6 @@ var (
 	cephcmds = map[string][]byte{"version": []byte("{\"prefix\":\"version\"}\000")}
 )
 
-// SvcCore
-type SvcCore struct {
-	// Name is the name/ID of the service
-	Name string `json:"name"`
-
-	// Type is the service/daemon type: MON, RGW, OSD
-	Type int `json:"type"`
-
-	// Host is the machine where the service runs
-	Host string `json:"host"`
-
-	// Version is the Ceph version of the service.
-	Version string `json:"version"`
-
-	// Reporting shows if a service is contactable and responsive
-	Reporting bool `json:"reporting"`
-}
-
 // Svc represents a Ceph service
 type Svc struct {
 	Core *SvcCore
@@ -71,8 +53,23 @@ type Svc struct {
 	b2 []byte
 }
 
-type cephVersion struct {
+// SvcCore is the universal core data shared by all service
+// descriptions.
+type SvcCore struct {
+	// Name is the name/ID of the service
+	Name string `json:"name"`
+
+	// Type is the service/daemon type: MON, RGW, OSD
+	Type int `json:"type"`
+
+	// Host is the machine where the service runs
+	Host string `json:"host"`
+
+	// Version is the Ceph version of the service.
 	Version string `json:"version"`
+
+	// Reporting shows if a service is contactable and responsive
+	Reporting bool `json:"reporting"`
 }
 
 // getCephServices examines wlc.CephConf and populates wlc.Svcs
