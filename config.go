@@ -44,10 +44,10 @@ type WLAggConfig struct {
 type WLCliConfig struct {
 }
 
-// NewConfig returns a populated Whiplash configuration. `wlconf` is
-// the whiplash configuration file. `gensvcs` controls whether an
-// attempt will be made to read the Ceph configuration and construct a
-// list of services active on the machine.
+// New returns a populated Whiplash configuration. `wlconf` is the
+// whiplash configuration file. `gensvcs` controls whether an attempt
+// will be made to read the Ceph configuration and construct a list of
+// services active on the machine.
 func New(wlconf string, gensvcs bool) (*WLConfig, error) {
 	wlc := &WLConfig{}
 	err := wlc.getConfig(wlconf, gensvcs)
