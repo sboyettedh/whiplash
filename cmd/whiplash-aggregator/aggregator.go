@@ -13,11 +13,13 @@ var (
 	whipconf string
 	// storage for current status of all reporting services
 	svcs = map[string]*whiplash.SvcCore{}
-	// map[cephstore][]svcname - lets us do per-cephstore reporting
-	// until mon reporting of 'ceph osd tree' is in
+	// per-service update timestamps
+	upds = map[string]map[string]int64{}
 	svcmap = map[string][]string{}
 	// pre-rolled messages
 	success = []byte("received")
+	// map[cephstore][]svcname - lets us do per-cephstore reporting
+	// until mon reporting of 'ceph osd tree' is in
 )
 
 func init() {

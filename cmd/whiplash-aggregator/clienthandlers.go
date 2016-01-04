@@ -12,8 +12,9 @@ func pingHandler(args [][]byte) ([]byte, error) {
 	json.Unmarshal(args[0], req)
 	if svc, ok := svcs[req.Svc.Name]; !ok {
 		log.Printf("adding svc %v", req.Svc.Name)
-		// add service to svcs
+		// add service to svcs, upds
 		svcs[req.Svc.Name] = req.Svc
+		upds[req.Svc.Name] = map[string]int64{"ping": req.Time}
 		// and to svcmap
 		if _, ok := svcmap[req.Svc.Host]; !ok {
 			log.Printf("adding host %v", req.Svc.Host)
@@ -21,8 +22,11 @@ func pingHandler(args [][]byte) ([]byte, error) {
 		}
 		svcmap[req.Svc.Host] = append(svcmap[req.Svc.Host], req.Svc.Name)
 	} else {
-		// TODO handle updates
 		log.Printf("got update from %v", svc.Name)
+		// TODO make version change an Event, once events are implemented
+		svc.Version = req.Svc.Version
+		svc.Reporting = req.Svc.Reporting
+		upds[req.Svc.Name]["ping"] = req.Time
 	}
 	return []byte("ok"), nil
 }

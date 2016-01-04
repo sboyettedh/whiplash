@@ -2,7 +2,6 @@ package whiplash // github.com/sboyettedh/whiplash
 
 import (
 	"encoding/json"
-	"time"
 )
 
 const (
@@ -36,7 +35,7 @@ type Host struct {
 // name followed by whitespace followed by a JSON-encoded Request.
 type ClientUpdate struct {
 	// Time is the timestamp when the update was sent
-	Time time.Time
+	Time int64
 
 	// Svc is the core identifying and status info about the service
 	// making the request.

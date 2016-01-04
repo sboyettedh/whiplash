@@ -94,7 +94,7 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 				continue
 			}
 			sendData("ping", &whiplash.ClientUpdate{
-				Time: time.Now(),
+				Time: time.Now().Unix(),
 				Svc: svc.Core,
 				Payload: nilPayload,
 			})
@@ -115,7 +115,7 @@ func statSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 				continue
 			}
 			sendData("stat", &whiplash.ClientUpdate{
-				Time: time.Now(),
+				Time: time.Now().Unix(),
 				Svc: svc.Core,
 				Payload: statdata,
 			})
