@@ -131,7 +131,6 @@ func (s *Svc) Ping() {
 }
 
 // Query sends a request to a Ceph service and reads the result.
-// TODO replace this with a standard aclient instance after 0.19
 func (s *Svc) Query(req string) error {
 	// make sure we know this command
 	cmd, ok := cephcmds[req]
@@ -146,6 +145,7 @@ func (s *Svc) Query(req string) error {
 	}
 	defer c.Close()
 
+	// dispatch and return
 	s.Resp, err = c.Dispatch(cmd)
 	if err != nil {
 		return fmt.Errorf("could not read reply on %s: %s\n", s.Sock, err)
