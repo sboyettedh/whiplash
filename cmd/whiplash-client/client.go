@@ -16,6 +16,8 @@ var (
 	whipconf string
 	hostname string
 	acconf *aclient.Config
+	// nil payload for pings
+	nilPayload json.RawMessage
 	// which interval set to use for tickers
 	intv int
 	// the interval sets
@@ -30,6 +32,7 @@ var (
 func init() {
 	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.conf", "Whiplash configuration file")
 	hostname, _ = os.LookupEnv("HOSTNAME")
+	nilPayload, _ := json.Marshal(nil)
 }
 
 func main() {
@@ -82,10 +85,7 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 				continue
 			}
 			log.Println("sending ping request")
-			tmpPayload, _ := json.Marshal(nil) // TODO this'll go away
-											   // when we have per-svc
-											   // data flowing
-			sendData("ping", &whiplash.ClientRequest{Svc: svc.Core, Payload: tmpPayload})
+			sendData("ping", &whiplash.ClientRequest{Svc: svc.Core, Payload: nilPayload})
 		}
 	}
 }
