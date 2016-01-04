@@ -42,7 +42,7 @@ func main() {
 		log.Fatalf("error reading configuration file: %v\n", err)
 	}
 	sigchan := whiplash.AppSetup("whiplash-client", "0.3.0", aclient.Version)
-	defer whiplash.AppCleanup("whiplash")
+	defer whiplash.AppCleanup("whiplash-client")
 
 
 	// need an aclient configuration to talk to the aggregator with
@@ -59,7 +59,7 @@ func main() {
 	pingticker := time.NewTicker(time.Second * intvs[intv]["ping"])
 	statticker := time.NewTicker(time.Second * intvs[intv]["stat"])
 	go pingSvcs(wl.Svcs, pingticker.C)
-	go pingSvcs(wl.Svcs, statticker.C)
+	go statSvcs(wl.Svcs, statticker.C)
 
 	// mainloop
 	keepalive := true
@@ -86,6 +86,7 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 	// every tick...
 	for _ = range tc {
 		// loop over known services
+		log.Println("updating: ping")
 		for _, svc := range svcs {
 			// ping, then send data if there are no issues
 			svc.Ping()
@@ -93,7 +94,7 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 				log.Println("ping failed:", svc.Core.Name, svc.Err)
 				continue
 			}
-			sendData("ping", &whiplash.ClientUpdate{
+			sendData("ping", svc.Core.Name, &whiplash.ClientUpdate{
 				Time: time.Now().Unix(),
 				Svc: svc.Core,
 				Payload: nilPayload,
@@ -107,14 +108,15 @@ func pingSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 func statSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 	var statdata json.RawMessage
 	for _ = range tc {
+		log.Println("updating: stat")
 		for _, svc := range svcs {
 			statdata = svc.Stat()
 			// TODO handle MONs and RGWs
 			if svc.Err != nil {
-				log.Println("ping failed:", svc.Core.Name, svc.Err)
+				log.Println("stat failed:", svc.Core.Name, svc.Err)
 				continue
 			}
-			sendData("stat", &whiplash.ClientUpdate{
+			sendData("stat", svc.Core.Name, &whiplash.ClientUpdate{
 				Time: time.Now().Unix(),
 				Svc: svc.Core,
 				Payload: statdata,
@@ -124,7 +126,7 @@ func statSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 }
 
 // sendData handles the actual sending of data to the aggregator.
-func sendData(cmd string, u *whiplash.ClientUpdate) {
+func sendData(cmd, svc string, u *whiplash.ClientUpdate) {
 	// create a new aclient instance
 	ac, err := aclient.NewTCP(*acconf)
 	if err != nil {
@@ -141,11 +143,9 @@ func sendData(cmd string, u *whiplash.ClientUpdate) {
 	req := []byte(cmd)
 	req = append(req, 32)
 	req = append(req, jupdate...)
-	log.Println("sending update:", cmd)
-	resp, err := ac.Dispatch(req)
+	_, err = ac.Dispatch(req)
 	if err != nil {
-		log.Println(err)
+		log.Println("err dispatching", cmd, "for", svc, ":", err)
 		return
 	}
-	log.Println("got response:", string(resp))
 }

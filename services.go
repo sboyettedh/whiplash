@@ -19,7 +19,10 @@ const (
 
 var (
 	// the list of admin socket commands we know
-	cephcmds = map[string][]byte{"version": []byte("{\"prefix\":\"version\"}\000")}
+	cephcmds = map[string][]byte{
+		"version": []byte("{\"prefix\":\"version\"}\000"),
+		"perf dump": []byte("{\"prefix\":\"perf dump\"}\000"),
+	}
 )
 
 // Svc represents a Ceph service

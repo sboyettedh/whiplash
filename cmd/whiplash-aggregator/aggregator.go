@@ -37,7 +37,7 @@ func main() {
 	}
 	// and do application initialization
 	sigchan := whiplash.AppSetup("whiplash-aggregator", "0.3.0", asock.Version)
-	defer whiplash.AppCleanup("whiplash")
+	defer whiplash.AppCleanup("whiplash-aggregator")
 
 	// setup the client asock instance. first set the msglvl, then
 	// instantiate the asock.
