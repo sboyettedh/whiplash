@@ -1,10 +1,6 @@
 package whiplash
 
 import (
-//	"net"
-//	"time"
-//	"bytes"
-//	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -125,6 +121,42 @@ func (s *Svc) Ping() {
 	s.Core.Reporting = true
 	s.Err = nil
 	s.Core.Version = vs.Version
+}
+
+func (s *Svc) Stat() json.RawMessage {
+	err := s.Query("perf dump")
+	if err != nil {
+		s.Core.Reporting = false
+		s.Err = err
+		return nil
+	}
+	var statdata json.RawMessage
+	if s.Core.Type == OSD {
+		statdata = s.StatOsd()
+	}
+	// TODO handle MON, RGW
+	return statdata
+}
+
+func (s *Svc) StatOsd() json.RawMessage {
+	var os OsdStat
+	var pd cephOsdPerfDump
+	err := json.Unmarshal(s.Resp, &pd)
+	if err != nil {
+		s.Err = err
+		return nil
+	}
+	var raw json.RawMessage
+	os.BytesUsed = pd.Osd.StatBytes
+	os.BytesAvail = pd.Osd.StatBytesAvail
+	os.PgPrimary = pd.Osd.NumPgPrimary
+	os.PgReplica = pd.Osd.NumPgReplica
+	raw, err = json.Marshal(os)
+	if err != nil {
+		s.Err = err
+		return nil
+	}
+	return raw
 }
 
 // Query sends a request to a Ceph service and reads the result.

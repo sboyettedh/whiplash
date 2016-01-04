@@ -59,9 +59,9 @@ type QueryResponse struct {
 	Data json.RawMessage `json:"data"`
 }
 
-// OsdSvc is the data we want to ship to the aggregator about an OSD
-// service.
-type OsdSvc struct {
+// OsdStat is the data we want to ship to the aggregator about an OSD
+// service's status
+type OsdStat struct {
 	// Weight is the crush weight of the OSD.
 	Weight float32
 	// BytesUsed is the amount of data stored on the OSD
@@ -96,7 +96,7 @@ type cephOsdPerfDump struct {
 	Objecter json.RawMessage `json:"objecter"`
 	// Osd is currently the only thing we care about in here. It holds
 	// tons of data about how the OSD is currently looking.
-	Osd CephOsdPerfDumpOsd `json:"osd"`
+	Osd cephOsdPerfDumpOsd `json:"osd"`
 	RecoveryState json.RawMessage `json:"recoverystate_perf"`
 	ThrottleFSBytes json.RawMessage `json:"throttle-filestore_bytes"`
 	ThrottleFSOps json.RawMessage `json:"throttle-filestore_ops"`
