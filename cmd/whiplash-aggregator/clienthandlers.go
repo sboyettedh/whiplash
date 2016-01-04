@@ -8,25 +8,46 @@ import (
 )
 
 func pingHandler(args [][]byte) ([]byte, error) {
-	req := &whiplash.ClientUpdate{}
-	json.Unmarshal(args[0], req)
-	if svc, ok := svcs[req.Svc.Name]; !ok {
-		log.Println("adding svc", req.Svc.Name)
+	upd := &whiplash.ClientUpdate{}
+	err := json.Unmarshal(args[0], upd)
+	if err != nil {
+		return nil, err
+	}
+	if svc, ok := svcs[upd.Svc.Name]; !ok {
+		log.Println("adding svc", upd.Svc.Name)
 		// add service to svcs, upds
-		svcs[req.Svc.Name] = req.Svc
-		upds[req.Svc.Name] = map[string]int64{"ping": req.Time}
+		svcs[upd.Svc.Name] = upd.Svc
+		upds[upd.Svc.Name] = map[string]int64{"ping": upd.Time}
 		// and to svcmap
-		if _, ok := svcmap[req.Svc.Host]; !ok {
-			log.Println("adding host", req.Svc.Host)
-			svcmap[req.Svc.Host] = []string{}
+		if _, ok := svcmap[upd.Svc.Host]; !ok {
+			log.Println("adding host", upd.Svc.Host)
+			svcmap[upd.Svc.Host] = []string{}
 		}
-		svcmap[req.Svc.Host] = append(svcmap[req.Svc.Host], req.Svc.Name)
+		svcmap[upd.Svc.Host] = append(svcmap[upd.Svc.Host], upd.Svc.Name)
 	} else {
 		log.Println("updating", svc.Name)
 		// TODO make version change an Event, once events are implemented
-		svc.Version = req.Svc.Version
-		svc.Reporting = req.Svc.Reporting
-		upds[req.Svc.Name]["ping"] = req.Time
+		svc.Version = upd.Svc.Version
+		svc.Reporting = upd.Svc.Reporting
+		upds[upd.Svc.Name]["ping"] = upd.Time
 	}
-	return []byte("ok"), nil
+	return success, nil
+}
+
+func statHandler(args [][]byte) ([]byte, error) {
+	upd := &whiplash.ClientUpdate{}
+	// unpack the update
+	err := json.Unmarshal(args[0], upd)
+	if err != nil {
+		return nil, err
+	}
+	// unpack and update the status
+	if upd.Svc.Type == whiplash.OSD {
+		var stat *whiplash.OsdStat
+		err = json.Unmarshal(upd.Payload, stat)
+		osdstats[upd.Svc.Name] = stat
+	}
+	upds[upd.Svc.Name]["stat"] = upd.Time
+
+	return success, nil
 }

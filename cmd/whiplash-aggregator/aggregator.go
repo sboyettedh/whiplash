@@ -15,11 +15,12 @@ var (
 	svcs = map[string]*whiplash.SvcCore{}
 	// per-service update timestamps
 	upds = map[string]map[string]int64{}
+	// osd status info
+	osdstats = map[string]*whiplash.OsdStat{}
+	// host-to-service mapping
 	svcmap = map[string][]string{}
 	// pre-rolled messages
 	success = []byte("received")
-	// map[cephstore][]svcname - lets us do per-cephstore reporting
-	// until mon reporting of 'ceph osd tree' is in
 )
 
 func init() {
@@ -63,6 +64,7 @@ func main() {
 	// and add command handlers to the asock instance
 	handlers := map[string]asock.DispatchFunc{
 		"ping": pingHandler,
+		"stat": statHandler,
 	}
 	for name, handler := range handlers {
 		err = cas.AddHandler(name, "nosplit", handler)
