@@ -33,7 +33,7 @@ func main() {
 		log.Fatalf("error reading configuration file: %v\n", err)
 	}
 	// and do application initialization
-	sigchan := whiplash.AppSetup("whiplash", "0.2.0", asock.Version)
+	sigchan := whiplash.AppSetup("whiplash-aggregator", "0.3.0", asock.Version)
 	defer whiplash.AppCleanup("whiplash")
 
 	// setup the client asock instance. first set the msglvl, then

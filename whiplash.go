@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	Version = "0.2.0"
+	Version = "0.3.0"
 )
 
 // Row represents a datacenter row. It contains Racks.
