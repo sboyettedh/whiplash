@@ -9,11 +9,6 @@ import (
 	"syscall"
 )
 
-const (
-	DEBUG = iota
-	ERROR
-)
-
 // AppSetup switches logging to a file (based on application name) and
 // does pidfile handling.
 func AppSetup(appname, appver, asockver string) (chan os.Signal) {
