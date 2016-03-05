@@ -9,17 +9,23 @@ import (
 	"strings"
 
 	"firepear.net/aclient"
+	"firepear.net/gaot"
 	"github.com/sboyettedh/whiplash"
 )
 
 var (
 	whipconf string
 	dumpjson bool
+	commands = gaot.NewFromString("status", nil)
 )
 
 func init() {
+	// setup options vars
 	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.conf", "Whiplash configuration file")
 	flag.BoolVar(&dumpjson, "j", false, "Output query response as raw JSON")
+	// load up command structure into trie
+	cmdtail := commands.FindString("status")
+	cmdtail.InsertString("cluster", nil)
 }
 
 func main() {
@@ -32,7 +38,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("error reading configuration file: %s\n", err)
 	}
-	flag.Parse()
+
+	// validate user input
+	err = validateInput()
 
 	// set up configuration and create aclient instance
 	acconf := aclient.Config{
@@ -47,7 +55,6 @@ func main() {
 
 	// stitch together the non-option arguments into our request
 	req := strings.Join(flag.Args(), " ")
-
 	// and dispatch it to the server!
 	respj, err := c.Dispatch([]byte(req))
 	if err != nil {
@@ -72,4 +79,12 @@ func main() {
 
 	// else, we have to hand off to a pretty-printing routine
 	// TODO write a pretty-printing routine
+}
+
+func validateInput() error {
+	// get remaining arguments
+//	args := flag.Args()
+	// slam together remaining args
+//	req := strings.Join(flag.Args(), "")
+	return nil
 }
