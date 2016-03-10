@@ -52,7 +52,7 @@ func main() {
 	case "fatal":
 		msglvl = asock.Fatal
 	}
-	asconf := asock.Config{
+	asconf := &asock.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
 		Msglvl: msglvl,
 		Timeout: wl.Aggregator.Timeout,
@@ -75,7 +75,7 @@ func main() {
 	log.Println("client asock instantiated")
 
 	// now setup the query asock instance
-	asconf = asock.Config{
+	asconf = &asock.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.QueryPort,
 		Msglvl: msglvl,
 		Timeout: wl.Aggregator.QTimeout,
