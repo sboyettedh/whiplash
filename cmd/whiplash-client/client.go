@@ -41,7 +41,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error reading configuration file: %v\n", err)
 	}
-	sigchan := whiplash.AppSetup("whiplash-client", "0.3.0", aclient.Version)
+	sigchan := whiplash.AppSetup("whiplash-client", "0.3.0", aclient.Pkgname, aclient.Version)
 	defer whiplash.AppCleanup("whiplash-client")
 
 

@@ -11,7 +11,7 @@ import (
 
 // AppSetup switches logging to a file (based on application name) and
 // does pidfile handling.
-func AppSetup(appname, appver, asockver string) (chan os.Signal) {
+func AppSetup(appname, appver, libname, libver string) (chan os.Signal) {
 	// First, see if an existing pidfile can be read
 	pidfile := "/var/run/" + appname + ".pid"
 	pb, err := ioutil.ReadFile(pidfile)
@@ -32,7 +32,7 @@ func AppSetup(appname, appver, asockver string) (chan os.Signal) {
 	log.SetOutput(f)
 	// write startup messages
 	log.Printf("====================================== %s %s beginning operations\n", appname, appver)
-	log.Printf("asock/client v%s; whiplash lib v%s\n", asockver, Version)
+	log.Printf("%s v%s -- whiplash v%s\n", libname, libver, Version)
 
 	// write new pidfile
 	pidstr := strconv.Itoa(os.Getpid()) + "\n"
