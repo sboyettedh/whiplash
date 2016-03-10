@@ -10,7 +10,7 @@ import (
 
 var (
 	// whiplash configuration file
-	whipconf string
+	whipconf = flag.String("config", "/etc/whiplash.conf", "Whiplash configuration file")
 	// storage for current status of all reporting services
 	svcs = map[string]*whiplash.SvcCore{}
 	// per-service update timestamps
@@ -23,15 +23,12 @@ var (
 	success = []byte("received")
 )
 
-func init() {
-	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.conf", "Whiplash configuration file")
-}
 
 func main() {
 	// parse flags
 	flag.Parse()
 	// read the whiplash configuration
-	wl, err := whiplash.New(whipconf, false)
+	wl, err := whiplash.New(*whipconf, false)
 	if err != nil {
 		log.Fatalf("error reading configuration file: %v\n", err)
 	}

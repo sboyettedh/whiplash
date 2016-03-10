@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	whipconf string
+	whipconf = flag.String("config", "/etc/whiplash.conf", "Whiplash configuration file")
 	hostname string
 	acconf *aclient.Config
 	// nil payload for pings
@@ -30,14 +30,13 @@ var (
 )
 
 func init() {
-	flag.StringVar(&whipconf, "whipconf", "/etc/whiplash.conf", "Whiplash configuration file")
 	hostname, _ = os.LookupEnv("HOSTNAME")
 	nilPayload, _ = json.Marshal(nil)
 }
 
 func main() {
 	flag.Parse()
-	wl, err := whiplash.New(whipconf, true)
+	wl, err := whiplash.New(*whipconf, true)
 	if err != nil {
 		log.Fatalf("error reading configuration file: %v\n", err)
 	}
