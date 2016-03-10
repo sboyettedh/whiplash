@@ -38,10 +38,17 @@ type WLAggConfig struct {
 	// MsgLvl sets the Asock.Config Msglvl parameter. Valid: "all",
 	// "conn", "error", "fatal".
 	MsgLvl string `json:"msglvl"`
+	// Timeout sets the Asock.Config Timeout parameter for clients
+	Timeout int64 `json:"timeout"`
+	// QTimeout sets the Asock.Config Timeout parameter for wlq
+	QTimeout int64 `json:"qtimeout"`
 }
 
 // WLCliConfig is the Whiplash agent configuration.
 type WLCliConfig struct {
+	// MsgLvl sets the Asock.Config Msglvl parameter. Valid: "all",
+	// "conn", "error", "fatal".
+	Timeout int64 `json:"timeout"`
 }
 
 // New returns a populated Whiplash configuration. `wlconf` is the

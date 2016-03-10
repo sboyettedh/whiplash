@@ -97,7 +97,7 @@ func (wlc *WLConfig) getCephServices() {
 		}
 		// only add defined services to Svcs when the admin socket exists
 		if _, err := os.Stat(s.Sock); err == nil {
-			s.acconf = &aclient.Config{Addr: s.Sock, Timeout: 100, NoPrefix: true}
+			s.acconf = &aclient.Config{Addr: s.Sock, Timeout: 100, OmitPrefix: true}
 			wlc.Svcs[k] = s
 		}
 	}
@@ -178,7 +178,7 @@ func (s *Svc) Query(req string) error {
 	}
 
 	// make the connection
-	c, err := aclient.NewUnix(*s.acconf)
+	c, err := aclient.NewUnix(s.acconf)
 	if err != nil {
 		return fmt.Errorf("could not connect to sock %s: %s\n", s.Sock, err)
 	}

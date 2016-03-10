@@ -55,7 +55,7 @@ func main() {
 	asconf := asock.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
 		Msglvl: msglvl,
-		Timeout: 100,
+		Timeout: wl.Aggregator.Timeout,
 	}
 	cas, err := asock.NewTCP(asconf)
 	if err != nil {
@@ -78,7 +78,7 @@ func main() {
 	asconf = asock.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.QueryPort,
 		Msglvl: msglvl,
-		Timeout: 100,
+		Timeout: wl.Aggregator.QTimeout,
 	}
 	qas, err := asock.NewTCP(asconf)
 	if err != nil {

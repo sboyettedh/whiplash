@@ -48,7 +48,7 @@ func main() {
 	// need an aclient configuration to talk to the aggregator with
 	acconf = &aclient.Config{
 		Addr: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
-		Timeout: 100,
+		Timeout: wl.Client.Timeout,
 	}
 
 	// decide what notification interval to use
@@ -128,7 +128,7 @@ func statSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 // sendData handles the actual sending of data to the aggregator.
 func sendData(cmd, svc string, u *whiplash.ClientUpdate) {
 	// create a new aclient instance
-	ac, err := aclient.NewTCP(*acconf)
+	ac, err := aclient.NewTCP(acconf)
 	if err != nil {
 		log.Println(err)
 		return
