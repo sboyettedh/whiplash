@@ -17,30 +17,55 @@ func pingHandler(args [][]byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if svc, ok := svcs[upd.Svc.Name]; !ok {
-		log.Println("adding svc", upd.Svc.Name)
-		// add service to svcs, upds
-		svcs[upd.Svc.Name] = upd.Svc
-		upds[upd.Svc.Name] = map[string]int64{"ping": upd.Time}
-		// and to svcmap
-		if _, ok := svcmap[upd.Svc.Host]; !ok {
-			log.Println("adding host", upd.Svc.Host)
-			svcmap[upd.Svc.Host] = []string{}
+	// have we encountered this service before?
+	svcs.RLock()
+	_, ok := svcs.m[upd.Svc.Name]
+	svcs.RUnlock()
+	if !ok {
+		// no. add it (and its host if needed) to the svcmap
+		svcmap.RLock()
+		_, ok := svcmap.m[upd.Svc.Host]
+		svcmap.RUnlock()
+		if !ok {
+			// host not found; add host and service
+			svcmap.Lock()
+			svcmap.m[upd.Svc.Host] = []string{}
+			svcmap.m[upd.Svc.Host] = append(svcmap.m[upd.Svc.Host], upd.Svc.Name)
+			svcmap.Unlock()
+			log.Println("added host", upd.Svc.Host)
+		} else {
+			// host found; just add the service (duplicating the
+			// append prevents back-to-back locking)
+			svcmap.Lock()
+			svcmap.m[upd.Svc.Host] = append(svcmap.m[upd.Svc.Host], upd.Svc.Name)
+			svcmap.Unlock()
 		}
-		svcmap[upd.Svc.Host] = append(svcmap[upd.Svc.Host], upd.Svc.Name)
+		// now add service to svcs and upds
+		svcs.Lock()
+		svcs.m[upd.Svc.Name] = upd.Svc
+		svcs.Unlock()
+		upds.Lock()
+		upds.m[upd.Svc.Name] = map[string]int64{"ping": upd.Time}
+		upds.Unlock()
+		log.Println("added svc", upd.Svc.Name)
 	} else {
-		log.Println("updating", svc.Name)
+		// we have seen the service before. update it!
 		// TODO make version change an Event, once events are implemented
-		svc.Version = upd.Svc.Version
-		svc.Reporting = upd.Svc.Reporting
-		upds[upd.Svc.Name]["ping"] = upd.Time
+		svcs.Lock()
+		svcs.m[upd.Svc.Name].Version = upd.Svc.Version
+		svcs.m[upd.Svc.Name].Reporting = upd.Svc.Reporting
+		svcs.Unlock()
+		upds.Lock()
+		upds.m[upd.Svc.Name]["ping"] = upd.Time
+		upds.Unlock()
+		log.Println("updated svc", upd.Svc.Name)
 	}
 	return success, nil
 }
 
 // statHandler accepts and processes stat updates.
 func statHandler(args [][]byte) ([]byte, error) {
-	upd := &whiplash.ClientUpdate{}
+/*	upd := &whiplash.ClientUpdate{}
 	// unpack the update
 	err := json.Unmarshal(args[0], upd)
 	if err != nil {
@@ -53,6 +78,6 @@ func statHandler(args [][]byte) ([]byte, error) {
 		osdstats[upd.Svc.Name] = stat
 	}
 	upds[upd.Svc.Name]["stat"] = upd.Time
-
+*/
 	return success, nil
 }

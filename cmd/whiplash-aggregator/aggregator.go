@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"sync"
 
 	"firepear.net/asock"
 	"github.com/sboyettedh/whiplash"
@@ -11,16 +12,29 @@ import (
 var (
 	// whiplash configuration file
 	whipconf = flag.String("config", "/etc/whiplash.conf", "Whiplash configuration file")
+
 	// storage for current status of all reporting services
-	svcs = map[string]*whiplash.SvcCore{}
+	svcs = struct{
+		sync.RWMutex
+		m map[string]*whiplash.SvcCore
+	}{m: make(map[string]*whiplash.SvcCore)}
+	// host-to-service mapping
+	svcmap = struct{
+		sync.RWMutex
+		m map[string][]string
+	}{m: make(map[string][]string)}
+
 	// per-service update timestamps
-	upds = map[string]map[string]int64{}
+	upds = struct{
+		sync.RWMutex
+		m map[string]map[string]int64
+	}{m: make(map[string]map[string]int64)}
+
 	// osd status info
 	osdstats = map[string]*whiplash.OsdStat{}
-	// host-to-service mapping
-	svcmap = map[string][]string{}
+
 	// pre-rolled messages
-	success = []byte("received")
+	success = []byte("ok")
 )
 
 
