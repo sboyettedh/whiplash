@@ -28,6 +28,8 @@ func AppSetup(appname, appver, libname, libver string) (chan os.Signal) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	syscall.Dup2(int(f.Fd()), 1)
+	syscall.Dup2(int(f.Fd()), 2)
 	// set logging to the logfile
 	log.SetOutput(f)
 	// write startup messages
