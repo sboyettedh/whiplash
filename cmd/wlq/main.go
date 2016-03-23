@@ -21,11 +21,12 @@ var (
 
 func init() {
 	// setup options vars
-	flag.StringVar(&whipconf, "config", "/etc/whiplash.conf", "Whiplash configuration file")
+	flag.StringVar(&whipconf, "c", "/etc/whiplash.conf", "Whiplash configuration file")
 	flag.BoolVar(&dumpjson, "j", false, "Output query response as raw JSON")
 	// load up command structure into trie
 	commands = gaot.NewFromString("status", nil)
 	commands.InsertString("version", nil)
+	commands.InsertString("help", nil)
 	cmdtail := commands.FindString("status")
 	cmdtail.InsertString("cluster", nil)
 	cmdtail.InsertString("rack", nil)
@@ -51,6 +52,9 @@ func main() {
 	}
 	// handle non-networked commands
 	switch args[0] {
+	case "help":
+		showHelp()
+		quit(nil)
 	case "version":
 		showVersion()
 		quit(nil)
@@ -96,11 +100,6 @@ func main() {
 	// TODO write a pretty-printing routine
 }
 
-func showVersion() {
-	fmt.Printf("wlq v0.1.0 (whiplash v%s)\n", whiplash.Version)
-	quit(nil)
-}
-
 func validateInput() error {
 	// get list of top-level completions (commands)
 	cmdlist := commands.FirstCompletions()
@@ -143,6 +142,14 @@ func validateInput() error {
 	if subcmd == nil {
 		return fmt.Errorf("unknown subcommand: '%s'\n\tsubcommands for %s: %s",
 			args[1], args[0], subcmds)
+	} else if subcmd.Word == "" {
+		// partial match: show word completions from here
+		cmdlist = subcmd.FirstCompletions()
+		maybe := ""
+		for _, known := range cmdlist {
+			maybe = maybe + known.Word + " "
+		}
+		return fmt.Errorf("unknown subcommand %s\n\tdid you mean? %s", args[1], maybe)
 	}
 	return nil
 }
@@ -153,4 +160,40 @@ func quit(err error) {
 		os.Exit(1)
 	}
 	os.Exit(0)
+}
+
+func showVersion() {
+	fmt.Printf("wlq v0.1.0 (whiplash v%s)\n", whiplash.Version)
+}
+
+func showHelp() {
+	if len(args) == 1 {
+		fmt.Println(helptext["main"])
+		return
+	}
+	switch args[1] {
+	case "help":
+		fmt.Println(helptext["help"])
+	case "version":
+		fmt.Println(helptext["version"])
+	case "status":
+		if len(args) == 2 {
+			fmt.Println(helptext["status"])
+			return
+		}
+		switch args[2] {
+		case "cluster":
+			fmt.Println(helptext["statuscluster"])
+		case "rack":
+			fmt.Println(helptext["statusrack"])
+		case "node":
+			fmt.Println(helptext["statusnode"])
+		case "osd":
+			fmt.Println(helptext["statusosd"])
+		default:
+			fmt.Println("That doesn't seem to exist. Try 'wlq help status' as a starting place :)")
+		}
+	default:
+		fmt.Println("That doesn't seem to exist. Try 'wlq help' as a starting place :)")
+	}
 }
