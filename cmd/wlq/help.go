@@ -27,8 +27,12 @@ To do anything useful, a subcommand must be specified. Available subcommands:
     node
     osd
 See 'wlq help status SUBCOMMAND' for information on a subcommand.`,
-	"statuscluster":``,
-	"statusrack":``,
-	"statusnode":``,
-	"statusosd":``,
+	"statuscluster":`The 'status cluster' command provides a look a the state of the cluster
+as a whole.`,
+	"statusrack":`Usage: wlq status rack [RACKNAME]
+Shows an overview of the status of the given rack.`,
+	"statusnode":`Usage: wlq status node [NODENAME]
+Shows an overview of the status of the given cluster node.`,
+	"statusosd":`Usage: wlq status osd [OSDID]
+Shows detailed information about the given OSD.`,
 }
