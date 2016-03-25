@@ -13,11 +13,11 @@ import (
 )
 
 var (
-	whipconf = flag.String("config", "/etc/whiplash.conf", "Whiplash configuration file")
-	hostname string
+	whipconf = flag.String("c", "/etc/whiplash.conf", "Whiplash configuration file")
+	hostname, _ = os.LookupEnv("HOSTNAME")
 	acconf *aclient.Config
 	// nil payload for pings
-	nilPayload json.RawMessage
+	nilPayload, _ = json.Marshal(nil)
 	// which interval set to use for tickers
 	intv int
 	// the interval sets
@@ -29,11 +29,6 @@ var (
 	}
 )
 
-func init() {
-	hostname, _ = os.LookupEnv("HOSTNAME")
-	nilPayload, _ = json.Marshal(nil)
-}
-
 func main() {
 	flag.Parse()
 	wl, err := whiplash.New(*whipconf, true)
@@ -42,7 +37,6 @@ func main() {
 	}
 	sigchan := whiplash.AppSetup("whiplash-client", "0.1.0", aclient.Pkgname, aclient.Version)
 	defer whiplash.AppCleanup("whiplash-client")
-
 
 	// need an aclient configuration to talk to the aggregator with
 	acconf = &aclient.Config{

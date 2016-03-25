@@ -11,7 +11,7 @@ import (
 
 var (
 	// whiplash configuration file
-	whipconf = flag.String("config", "/etc/whiplash.conf", "Whiplash configuration file")
+	whipconf = flag.String("c", "/etc/whiplash.conf", "Whiplash configuration file")
 
 	// storage for current status of all reporting services
 	svcstat = &svcStatus{m: make(map[string]*whiplash.SvcCore)}
@@ -26,6 +26,15 @@ var (
 
 	// pre-rolled messages
 	success = []byte("ok")
+
+	// msglvl mapping
+	msglvl = map[string]int{
+		"all": asock.All,
+		"conn": asock.Conn,
+		"error": asock.Error,
+		"fatal": asock.Fatal,
+	}
+
 )
 
 type svcStatus struct {
@@ -115,20 +124,9 @@ func main() {
 
 	// setup the client asock instance. first set the msglvl, then
 	// instantiate the asock.
-	var msglvl int
-	switch wl.Aggregator.MsgLvl {
-	case "all":
-		msglvl = asock.All
-	case "conn":
-		msglvl = asock.Conn
-	case "error":
-		msglvl = asock.Error
-	case "fatal":
-		msglvl = asock.Fatal
-	}
 	asconf := &asock.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
-		Msglvl: msglvl,
+		Msglvl: msglvl[wl.Aggregator.MsgLvl],
 		Timeout: wl.Aggregator.Timeout,
 	}
 	cas, err := asock.NewTCP(asconf)
@@ -151,7 +149,7 @@ func main() {
 	// now setup the query asock instance
 	asconf = &asock.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.QueryPort,
-		Msglvl: msglvl,
+		Msglvl: msglvl[wl.Aggregator.MsgLvl],
 		Timeout: wl.Aggregator.QTimeout,
 	}
 	qas, err := asock.NewTCP(asconf)
@@ -219,10 +217,7 @@ func main() {
 }
 
 func msgHandler(as *asock.Asock, msgchan chan error) {
-	var msg *asock.Msg
-	keepalive := true
-
-	for keepalive {
+	for msg := range as.Msgr {
 		// wait on a Msg to arrive and do a switch based on status code
 		msg = <-as.Msgr
 		switch msg.Code {
@@ -232,13 +227,13 @@ func msgHandler(as *asock.Asock, msgchan chan error) {
 			// clean things up, send the Msg to our main routine, then
 			// kill this for loop
 			as.Quit()
-			keepalive = false
 			msgchan <- msg
+			break
 		case 199:
 			// 199 is "we've been told to quit", so we want to break
-			// out of the 'for' here as well
-			keepalive = false
+			// out here as well
 			msgchan <- msg
+			break
 		default:
 			// anything else we just log!
 			log.Println(msg)

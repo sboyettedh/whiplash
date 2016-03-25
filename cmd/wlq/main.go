@@ -24,14 +24,14 @@ func init() {
 	flag.StringVar(&whipconf, "c", "/etc/whiplash.conf", "Whiplash configuration file")
 	flag.BoolVar(&dumpjson, "j", false, "Output query response as raw JSON")
 	// load up command structure into trie
-	commands = gaot.NewFromString("status", nil)
-	commands.InsertString("version", nil)
-	commands.InsertString("help", nil)
+	commands = gaot.NewFromString("status")
+	commands.InsertString("version")
+	commands.InsertString("help")
 	cmdtail := commands.FindString("status")
-	cmdtail.InsertString("cluster", nil)
-	cmdtail.InsertString("rack", nil)
-	cmdtail.InsertString("node", nil)
-	cmdtail.InsertString("osd", nil)
+	cmdtail.InsertString("cluster")
+	cmdtail.InsertString("rack")
+	cmdtail.InsertString("node")
+	cmdtail.InsertString("osd")
 }
 
 func main() {
@@ -103,55 +103,47 @@ func main() {
 func validateInput() error {
 	// get list of top-level completions (commands)
 	cmdlist := commands.FirstCompletions()
-	cmds := ""
-	for _, known := range cmdlist {
-		cmds = cmds + known.Word + " "
-	}
 	// get our arguments
 	args := flag.Args()
 	if len(args) == 0 {
-		return fmt.Errorf("no command given\n\tknown commands: %s", cmds)
+		return fmt.Errorf("no command given\n\tknown commands: %s", n2WordStr(cmdlist))
 	}
 	// see if we know the command
 	cmd := commands.FindString(args[0])
 	if cmd == nil {
 		// no. list known commands
-		return fmt.Errorf("unknown command: '%s'\n\tknown commands: %s", args[0], cmds)
+		return fmt.Errorf("unknown command: '%s'\n\tknown commands: %s", args[0], n2WordStr(cmdlist))
 	} else if cmd.Word == "" {
 		// partial match: show word completions from here
 		cmdlist = cmd.FirstCompletions()
-		maybe := ""
-		for _, known := range cmdlist {
-			maybe = maybe + known.Word + " "
-		}
-		return fmt.Errorf("unknown command %s\n\tdid you mean? %s", args[0], maybe)
+		return fmt.Errorf("unknown command %s\n\tdid you mean? %s", args[0], n2WordStr(cmdlist))
 	}
 	// yes. check the subcommand
 	cmdlist = cmd.Completions()
 	if len(cmdlist) == 0 {
 		return nil
 	}
-	subcmds := ""
-	for _, known := range cmdlist {
-		subcmds = subcmds + known.Word + " "
-	}
 	if len(args) == 1 {
-		return fmt.Errorf("no subcommand given\n\tsubcommands for %s: %s", args[0], subcmds)
+		return fmt.Errorf("no subcommand given\n\tsubcommands for %s: %s", args[0], n2WordStr(cmdlist))
 	}
 	subcmd := cmd.FindString(args[1])
 	if subcmd == nil {
 		return fmt.Errorf("unknown subcommand: '%s'\n\tsubcommands for %s: %s",
-			args[1], args[0], subcmds)
+			args[1], args[0], n2WordStr(cmdlist))
 	} else if subcmd.Word == "" {
 		// partial match: show word completions from here
 		cmdlist = subcmd.FirstCompletions()
-		maybe := ""
-		for _, known := range cmdlist {
-			maybe = maybe + known.Word + " "
-		}
-		return fmt.Errorf("unknown subcommand %s\n\tdid you mean? %s", args[1], maybe)
+		return fmt.Errorf("unknown subcommand %s\n\tdid you mean? %s", args[1], n2WordStr(cmdlist))
 	}
 	return nil
+}
+
+func n2WordStr(nodes []*gaot.Node) string {
+	chunks := []string{}
+	for _, node := range nodes {
+		chunks = append(chunks, node.Word)
+	}
+	return strings.Join(chunks, ", ")
 }
 
 func quit(err error) {
