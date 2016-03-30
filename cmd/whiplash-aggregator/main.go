@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"firepear.net/asock"
+	"firepear.net/petrel"
 	"github.com/sboyettedh/whiplash"
 )
 
@@ -29,10 +29,10 @@ var (
 
 	// msglvl mapping
 	msglvl = map[string]int{
-		"all": asock.All,
-		"conn": asock.Conn,
-		"error": asock.Error,
-		"fatal": asock.Fatal,
+		"all": petrel.All,
+		"conn": petrel.Conn,
+		"error": petrel.Error,
+		"fatal": petrel.Fatal,
 	}
 
 )
@@ -119,63 +119,63 @@ func main() {
 		log.Fatalf("error reading configuration file: %v\n", err)
 	}
 	// and do application initialization
-	sigchan := whiplash.AppSetup("whiplash-aggregator", "0.1.1", asock.Pkgname, asock.Version)
+	sigchan := whiplash.AppSetup("whiplash-aggregator", "0.1.1", petrel.Pkgname, petrel.Version)
 	defer whiplash.AppCleanup("whiplash-aggregator")
 
-	// setup the client asock instance. first set the msglvl, then
-	// instantiate the asock.
-	asconf := &asock.Config{
+	// setup the client petrel instance. first set the msglvl, then
+	// instantiate the petrel.
+	phconf := &petrel.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
 		Msglvl: msglvl[wl.Aggregator.MsgLvl],
 		Timeout: wl.Aggregator.Timeout,
 	}
-	cas, err := asock.NewTCP(asconf)
+	cph, err := petrel.NewTCP(phconf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	// and add command handlers to the asock instance
-	handlers := map[string]asock.DispatchFunc{
+	// and add command handlers to the petrel instance
+	handlers := map[string]petrel.DispatchFunc{
 		"ping": pingHandler,
 		"stat": statHandler,
 	}
 	for name, handler := range handlers {
-		err = cas.AddHandler(name, "nosplit", handler)
+		err = cph.AddFunc(name, "nosplit", handler)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	log.Println("client asock instantiated")
+	log.Println("client petrel instantiated")
 
-	// now setup the query asock instance
-	asconf = &asock.Config{
+	// now setup the query petrel instance
+	phconf = &petrel.Config{
 		Sockname: wl.Aggregator.BindAddr + ":" + wl.Aggregator.QueryPort,
 		Msglvl: msglvl[wl.Aggregator.MsgLvl],
 		Timeout: wl.Aggregator.QTimeout,
 	}
-	qas, err := asock.NewTCP(asconf)
+	qph, err := petrel.NewTCP(phconf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	// add command handlers to the query asock instance
-	handlers = map[string]asock.DispatchFunc{
+	// add command handlers to the query petrel instance
+	handlers = map[string]petrel.DispatchFunc{
 		"echo": qhEcho,
 	}
 	for name, handler := range handlers {
-		err = qas.AddHandler(name, "split", handler)
+		err = qph.AddFunc(name, "split", handler)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	log.Println("query asock instantiated")
+	log.Println("query petrel instantiated")
 
 
-	// create a channel for the client asock Msgr handler
+	// create a channel for the client petrel Msgr handler
 	msgchan := make(chan error, 1)
 	// and one for the query Msgr handler
 	querychan := make(chan error, 1)
 	// and launch them
-	go msgHandler(cas, msgchan)
-	go msgHandler(qas, querychan)
+	go msgHandler(cph, msgchan)
+	go msgHandler(qph, querychan)
 	log.Println("aggregator now listening")
 
 
@@ -185,30 +185,30 @@ func main() {
 		select {
 		case msg := <-msgchan:
 			// we've been handed a Msg over msgchan, which means that
-			// our Asock has shut itself down for some reason. if this
-			// were a more robust server, we would modularize Asock
+			// our Handler has shut itself down for some reason. if this
+			// were a more robust server, we would modularize Handler
 			// creation and this eventloop, so that should we trap a
-			// 599 we could spawn a new Asock and launch it in this
+			// 599 we could spawn a new Handler and launch it in this
 			// one's place. but we're just gonna exit this loop,
 			// causing main() to terminate, and with it the server
 			// instance.
-			log.Println("Asock instance has shut down. Last Msg received was:")
+			log.Println("Handler has shut down. Last Msg received was:")
 			log.Println(msg)
 			keepalive = false
 			break
 		case msg := <-querychan:
 			// the query handler has died. it should be safe to
 			// restart.
-			log.Println("Query asock instance has shut down. Last Msg received was:")
+			log.Println("Query handler  has shut down. Last Msg received was:")
 			log.Println(msg)
-			log.Println("Restarting query asock...")
+			log.Println("Restarting query petrel...")
 			// TODO what it says ^^there
 		case <- sigchan:
-			// we've trapped a signal from the OS. tell our Asock to
+			// we've trapped a signal from the OS. tell our Petrel to
 			// shut down, but don't exit the eventloop because we want
 			// to handle the Msgs which will be incoming.
 			log.Println("OS signal received; shutting down")
-			cas.Quit()
+			cph.Quit()
 		}
 		// there's no default case in the select, as that would cause
 		// it to be nonblocking. and that would cause main() to exit
@@ -216,17 +216,17 @@ func main() {
 	}
 }
 
-func msgHandler(as *asock.Asock, msgchan chan error) {
-	for msg := range as.Msgr {
+func msgHandler(ph *petrel.Handler, msgchan chan error) {
+	for msg := range ph.Msgr {
 		// wait on a Msg to arrive and do a switch based on status code
-		msg = <-as.Msgr
+		msg = <-ph.Msgr
 		switch msg.Code {
 		case 599:
-			// 599 is "the Asock listener has died". this means we're
+			// 599 is "the Petrel listener has died". this means we're
 			// not accepting connections anymore. call as.Quit() to
 			// clean things up, send the Msg to our main routine, then
 			// kill this for loop
-			as.Quit()
+			ph.Quit()
 			msgchan <- msg
 			break
 		case 199:
