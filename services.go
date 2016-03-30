@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"firepear.net/aclient"
+	"firepear.net/pclient"
 )
 
 // These are our Svc types, which are basically the types of ceph
@@ -39,7 +39,7 @@ type Svc struct {
 	Resp []byte
 
 	// configuration for connections to the admin socket
-	acconf *aclient.Config
+	pcconf *pclient.Config
 	// b0 is where we read the message length into
 	b0 []byte
 	// mlen is the unpacked length from b0
@@ -97,7 +97,7 @@ func (wlc *WLConfig) getCephServices() {
 		}
 		// only add defined services to Svcs when the admin socket exists
 		if _, err := os.Stat(s.Sock); err == nil {
-			s.acconf = &aclient.Config{Addr: s.Sock, Timeout: 100, OmitPrefix: true}
+			s.pcconf = &pclient.Config{Addr: s.Sock, Timeout: 100, OmitPrefix: true}
 			wlc.Svcs[k] = s
 		}
 	}
@@ -178,7 +178,7 @@ func (s *Svc) Query(req string) error {
 	}
 
 	// make the connection
-	c, err := aclient.NewUnix(s.acconf)
+	c, err := pclient.NewUnix(s.pcconf)
 	if err != nil {
 		return fmt.Errorf("could not connect to sock %s: %s\n", s.Sock, err)
 	}

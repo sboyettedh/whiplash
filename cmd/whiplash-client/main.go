@@ -8,14 +8,14 @@ import (
 	"os"
 	"time"
 
-	"firepear.net/aclient"
+	"firepear.net/pclient"
 	"github.com/sboyettedh/whiplash"
 )
 
 var (
 	whipconf = flag.String("c", "/etc/whiplash.conf", "Whiplash configuration file")
 	hostname, _ = os.LookupEnv("HOSTNAME")
-	acconf *aclient.Config
+	pcconf *pclient.Config
 	// nil payload for pings
 	nilPayload, _ = json.Marshal(nil)
 	// which interval set to use for tickers
@@ -35,11 +35,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("error reading configuration file: %v\n", err)
 	}
-	sigchan := whiplash.AppSetup("whiplash-client", "0.1.0", aclient.Pkgname, aclient.Version)
+	sigchan := whiplash.AppSetup("whiplash-client", "0.1.0", pclient.Pkgname, pclient.Version)
 	defer whiplash.AppCleanup("whiplash-client")
 
-	// need an aclient configuration to talk to the aggregator with
-	acconf = &aclient.Config{
+	// need a pclient configuration to talk to the aggregator with
+	pcconf = &pclient.Config{
 		Addr: wl.Aggregator.BindAddr + ":" + wl.Aggregator.BindPort,
 		Timeout: wl.Client.Timeout,
 	}
@@ -121,12 +121,12 @@ func statSvcs(svcs map[string]*whiplash.Svc, tc <-chan time.Time) {
 // sendData handles the actual sending of data to the aggregator.
 func sendData(cmd, svc string, u *whiplash.ClientUpdate) {
 	// create a new aclient instance
-	ac, err := aclient.NewTCP(acconf)
+	pc, err := pclient.NewTCP(pcconf)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	defer ac.Close()
+	defer pc.Close()
 	// success, so turn the update into json
 	jupdate, err := json.Marshal(u)
 	if err != nil {
@@ -136,7 +136,7 @@ func sendData(cmd, svc string, u *whiplash.ClientUpdate) {
 	req := []byte(cmd)
 	req = append(req, 32)
 	req = append(req, jupdate...)
-	_, err = ac.Dispatch(req)
+	_, err = pc.Dispatch(req)
 	if err != nil {
 		log.Println("err dispatching", cmd, "for", svc, ":", err)
 		return
