@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"firepear.net/aclient"
+	"firepear.net/pclient"
 	"firepear.net/gaot"
 	"github.com/sboyettedh/whiplash"
 )
@@ -25,6 +25,7 @@ func init() {
 	flag.BoolVar(&dumpjson, "j", false, "Output query response as raw JSON")
 	// load up command structure into trie
 	commands = gaot.NewFromString("status")
+	commands.InsertString("crushreload")
 	commands.InsertString("version")
 	commands.InsertString("help")
 	cmdtail := commands.FindString("status")
@@ -62,11 +63,11 @@ func main() {
 
 
 	// set up configuration and create aclient instance
-	acconf := &aclient.Config{
+	pcconf := &pclient.Config{
 		Addr: wl.Aggregator.BindAddr + ":" + wl.Aggregator.QueryPort,
 		Timeout: 100,
 	}
-	c, err := aclient.NewTCP(acconf)
+	c, err := pclient.NewTCP(pcconf)
 	if err != nil {
 		quit(fmt.Errorf("can't connect to aggregator: %s", err))
 	}
@@ -112,7 +113,8 @@ func validateInput() error {
 	cmd := commands.FindString(args[0])
 	if cmd == nil {
 		// no. list known commands
-		return fmt.Errorf("unknown command: '%s'\n\tknown commands: %s", args[0], n2WordStr(cmdlist))
+		return fmt.Errorf("unknown command: '%s'\n\tknown commands: %s",
+			args[0], n2WordStr(cmdlist))
 	} else if cmd.Word == "" {
 		// partial match: show word completions from here
 		cmdlist = cmd.FirstCompletions()
@@ -124,7 +126,8 @@ func validateInput() error {
 		return nil
 	}
 	if len(args) == 1 {
-		return fmt.Errorf("no subcommand given\n\tsubcommands for %s: %s", args[0], n2WordStr(cmdlist))
+		return fmt.Errorf("no subcommand given\n\tsubcommands for %s: %s",
+			args[0], n2WordStr(cmdlist))
 	}
 	subcmd := cmd.FindString(args[1])
 	if subcmd == nil {
@@ -168,6 +171,8 @@ func showHelp() {
 		fmt.Println(helptext["help"])
 	case "version":
 		fmt.Println(helptext["version"])
+	case "crushreload":
+		fmt.Println(helptext["crushreload"])
 	case "status":
 		if len(args) == 2 {
 			fmt.Println(helptext["status"])
