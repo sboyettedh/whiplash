@@ -10,13 +10,12 @@ There are two global options:
     -c [FILE] Path to whiplash config file (default: /etc/whiplash.conf)
     -j        Output JSON data instead of a formatted report
 
-Available commands are:
-    help
-    version
-    status
+To see available commands, run wlq with no arguments.
 
 Do 'wlq help [COMMAND]' or 'wlq help [COMMAND] [SUBCOMMAND] for more detailed
 information on usage of the commands and their subcommands.`,
+	"crushreload": `The 'crushreload' command sends a request asking that the aggregator
+reload the CRUSH map and refresh its cache of that data.`,
 	"status": `The 'status' command fetches information on current cluster status from
 the aggregator. By default this information is formatted and printed to the
 terminal as a report. To get raw data, pass wlq the -j option.
