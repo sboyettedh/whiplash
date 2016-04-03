@@ -39,9 +39,8 @@ package whiplash
 
 import (
 	"encoding/json"
-//	"fmt"
-	//"io/ioutil"
-//	"os/exec"
+	"io/ioutil"
+	"os/exec"
 )
 
 // These three types 
@@ -69,3 +68,20 @@ type osdtreeOSD struct {
 	Affinity float64 `json:"primary_affinity"`
 }
 
+// osdtreeDump calls 'ceph osd tree -f json' and writes the output to
+// a file.
+func osdtreeDump(output string) error {
+	jtree, err := exec.Command("ceph", "osd", "tree", "-f", "json").Output()
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(output, jtree, 0644)
+	return err
+}
+
+// osdtreeParse reads a JSON dump of 'ceph osd tree' and
+// populates/updates datastructures with it.
+func osdtreeParse(input string) error {
+	err := osdtreeDump(input)
+	return err
+}
