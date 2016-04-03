@@ -6,7 +6,7 @@ import (
 
 const (
 	// Version is the whiplash library version number.
-	Version = "0.4.0"
+	Version = "0.5.0"
 )
 
 // Row represents a datacenter row. It contains Racks.
