@@ -83,5 +83,27 @@ func osdtreeDump(output string) error {
 // populates/updates datastructures with it.
 func osdtreeParse(input string) error {
 	err := osdtreeDump(input)
-	return err
+	if err != nil {
+		return err
+	}
+	jtree, err := ioutil.ReadFile(input)
+	if err != nil {
+		return err
+	}
+	var tree osdtree
+	err = json.Unmarshal(treef, &tree)
+	if err != nil {
+		return err
+	}
+	var jcont osdtreeContainer
+	var josd osdtreeOSD
+	for i, node := range tree.Nodes {
+		err = json.Unmarshal(node, &josd)
+		if err == nil {
+			//fmt.Printf("Node %d: type %s, name %s\n", i, josd.Type, josd.Name)
+		} else {
+			json.Unmarshal(node, &jcont)
+			//fmt.Printf("Node %d: type %s, name %s\n", i, jcont.Type, jcont.Name)
+		}
+	}
 }
