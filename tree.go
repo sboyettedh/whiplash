@@ -70,6 +70,9 @@ type osdtreeOSD struct {
 
 // osdtreeDump calls 'ceph osd tree -f json' and writes the output to
 // a file.
+//
+// This is less efficient than other mechanisms, but it makes
+// osdtreeParse testable.
 func osdtreeDump(output string) error {
 	jtree, err := exec.Command("ceph", "osd", "tree", "-f", "json").Output()
 	if err != nil {
@@ -82,10 +85,6 @@ func osdtreeDump(output string) error {
 // osdtreeParse reads a JSON dump of 'ceph osd tree' and
 // populates/updates datastructures with it.
 func osdtreeParse(input string) error {
-	err := osdtreeDump(input)
-	if err != nil {
-		return err
-	}
 	jtree, err := ioutil.ReadFile(input)
 	if err != nil {
 		return err

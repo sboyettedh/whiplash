@@ -11,23 +11,23 @@ const (
 
 // Row represents a datacenter row. It contains Racks.
 type Row struct {
-	ID int
+	Id int
 	Name string
-	Children []int
+	Children map[string]*Rack
 }
 
 // Rack represents a datacenter rack. It contains Hosts.
 type Rack struct {
-	ID int
-	Name string
-	Children []int
+	Id int
+	Parent *Row
+	Children map[string]*Host
 }
 
 // Host represents a machine running Ceph services. Svcs belong to it.
 type Host struct {
-	ID int
-	Name string
-	Rack string
+	Id int
+	Parent *Rack
+	Children map[string]*OsdStat
 }
 
 // ClientUpdate is the struct used for interchange between whiplash clients
