@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"firepear.net/pclient"
+	"firepear.net/petrel"
 )
 
 // These are our Svc types, which are basically the types of ceph
@@ -28,28 +28,24 @@ var (
 // Svc represents a Ceph service
 type Svc struct {
 	Core *SvcCore
-
 	// Sock is the admin socket for the service
 	Sock string
-
 	// Err holds the error (if any) from the Ping() check
 	Err error
-
 	// Resp receives response data from Query()
 	Resp []byte
-
 	// configuration for connections to the admin socket
-	pcconf *pclient.Config
-	// b0 is where we read the message length into
-	b0 []byte
-	// mlen is the unpacked length from b0
-	mlen int32
-	// mread is the number of bytes read in the message so far
-	mread int32
-	// b1 is the buffer we read into from the network
-	b1 []byte
-	// b2 accumulates data from b1
-	b2 []byte
+	pcconf *petrel.ClientConfig
+        // b0 is where we read the message length into
+        b0 []byte
+        // mlen is the unpacked length from b0
+        mlen int32
+        // mread is the number of bytes read in the message so far
+        mread int32
+        // b1 is the buffer we read into from the network
+        b1 []byte
+        // b2 accumulates data from b1
+        b2 []byte
 }
 
 // SvcCore is the universal core data shared by all service
@@ -76,7 +72,7 @@ func (wlc *WLConfig) getCephServices() {
 	wlc.Svcs = make(map[string]*Svc)
 	// iterate over CephConf, adding OSDs and RGWs
 	for k, m := range wlc.CephConf {
-		s := &Svc{Core: &SvcCore{Name: k}, b0: make([]byte, 4)}
+		s := &Svc{Core: &SvcCore{Name: k}}
 		switch {
 		case strings.HasPrefix(k, "osd."):
 			s.Core.Type = OSD
@@ -95,9 +91,14 @@ func (wlc *WLConfig) getCephServices() {
 			s.Core.Host = wlc.CephConf[k]["host"]
 			s.Sock = strings.Replace(wlc.CephConf["osd"]["admin socket"], "$name", k, 1)
 		}
-		// only add defined services to Svcs when the admin socket exists
+		// only add defined services to Svcs when the admin
+		// socket exists
+
+		// TODO this shouldn't even be a petrel
+		// client; this is where the custom client for talking
+		// to Ceph goes.
 		if _, err := os.Stat(s.Sock); err == nil {
-			s.pcconf = &pclient.Config{Addr: s.Sock, Timeout: 100, OmitPrefix: true}
+			s.pcconf = &petrel.ClientConfig{Addr: s.Sock, Timeout: 100}
 			wlc.Svcs[k] = s
 		}
 	}
@@ -178,11 +179,11 @@ func (s *Svc) Query(req string) error {
 	}
 
 	// make the connection
-	c, err := pclient.NewUnix(s.pcconf)
+	c, err := petrel.UnixClient(s.pcconf)
 	if err != nil {
 		return fmt.Errorf("could not connect to sock %s: %s\n", s.Sock, err)
 	}
-	defer c.Close()
+	defer c.Quit()
 
 	// dispatch and return
 	s.Resp, err = c.Dispatch(cmd)
