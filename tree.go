@@ -90,13 +90,13 @@ func osdtreeParse(input string) error {
 		return err
 	}
 	var tree osdtree
-	err = json.Unmarshal(treef, &tree)
+	err = json.Unmarshal(jtree, &tree)
 	if err != nil {
 		return err
 	}
 	var jcont osdtreeContainer
 	var josd osdtreeOSD
-	for i, node := range tree.Nodes {
+	for _, node := range tree.Nodes {
 		err = json.Unmarshal(node, &josd)
 		if err == nil {
 			//fmt.Printf("Node %d: type %s, name %s\n", i, josd.Type, josd.Name)
@@ -105,4 +105,5 @@ func osdtreeParse(input string) error {
 			//fmt.Printf("Node %d: type %s, name %s\n", i, jcont.Type, jcont.Name)
 		}
 	}
+	return err
 }
