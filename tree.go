@@ -35,7 +35,7 @@ package whiplash
 // as containing two slices of json.RawMessage. Then, when iterating
 // over osdtree.Nodes, we take the most brute force approach possible:
 // try to Unmarshal the RawMessage into an osdtreeContainer; if that
-// produces an errors, Unmarshal it into an osdtreeOSD.
+// produces an error, Unmarshal it into an osdtreeOSD.
 
 import (
 	"encoding/json"
@@ -51,7 +51,7 @@ type osdtree struct {
 type osdtreeContainer struct {
 	ID int         `json:"id"`
 	Name string    `json:"name"`
-	Type string   `json:"type"`
+	Type string    `json:"type"`
 	Type_ID int    `json:"type_id"`
 	Children []int `json:"children"`
 }
